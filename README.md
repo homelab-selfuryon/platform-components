@@ -10,11 +10,21 @@ CUE module `github.com/homelab-selfuryon/platform-components@v0`. Owner: the pla
 
 ## How it fits
 
-```
-Renovate -> registry/latest.json --promote--> clusters/<c>/pins.json          (PR here)
-PR here:  cue cmd render (helm template) + check (whitelists) + kubeconform + Kyverno + object diff
-main:     one signed OCI artifact per cluster and set  ->  PR in gitops (digests)
-gitops:   signed artifact per cluster  ->  Flux verifies and applies the sets
+```mermaid
+flowchart LR
+    renovate([Renovate]) -->|chart versions| latest["registry/latest.json"]
+    latest -->|"cue cmd promote"| pins["clusters/&lt;c&gt;/pins.json"]
+
+    subgraph pr["Pull request here"]
+        direction TB
+        render["cue cmd render<br/>helm template"] --> checks["check: whitelists<br/>kubeconform · Kyverno"]
+        checks --> diff["object diff<br/>as PR comment"]
+    end
+
+    pins --> pr
+    pr -->|merge to main| release["release.yaml<br/>one signed OCI artifact<br/>per cluster and set"]
+    release -->|"PR: set digests<br/>(releases.json)"| gitops[("gitops")]
+    gitops -->|"signed artifact<br/>per cluster"| flux["Flux<br/>verifies signatures,<br/>applies the sets"]
 ```
 
 This repository holds _inputs_: component definitions and the version pins of each cluster. Where
@@ -65,7 +75,7 @@ One signed artifact per set and cluster: `components/<name>/{kustomization.yaml,
 | Set        | Components (version)                                                                                                                                                                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `rbac`     | `rbac` (privileged): namespaces, ServiceAccounts `component-<name>`, Roles and ClusterRoles generated from the components' whitelists; ServiceAccount `argo-apps`                                                            |
-| `system`   | `cilium` 1.20.4 (priv.), `flux-operator` 0.62.1 + Flux v2.10.0 (priv.), `kyverno` 3.9.2 (priv.), `gateway-api` (Gateway API + Envoy Gateway CRDs) 1.10.0, `cert-manager` v1.21.3, `internal-ca`                              |
+| `system`   | `cilium` 1.20.4 (priv.), `flux-operator` 0.62.1 + Flux v2.10.0 (priv.), `kyverno` 3.9.2 (priv., HelmRelease), `gateway-api` (Gateway API + Envoy Gateway CRDs) 1.10.0, `cert-manager` v1.21.3, `internal-ca`                 |
 | `platform` | `local-path-provisioner` v0.0.37, `metrics-server` 3.14.0, `envoy-gateway` 1.10.0, `external-dns` 1.23.0, `cnpg` 0.29.1, `secrets-store-csi-driver` 1.6.2, `openbao` 0.30.7, `openbao-csi-provider` 0.30.7, `argocd` 10.15.0 |
 | `policy`   | `kyverno-policies`, `host-firewall`, `cluster-issuers`, `gateways`                                                                                                                                                           |
 | `tenants`  | `team-notes` (from `teams/notes.cue`)                                                                                                                                                                                        |
