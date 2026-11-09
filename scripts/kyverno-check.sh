@@ -40,9 +40,16 @@ args=()
 for f in "${files[@]}" "${approx[@]}"; do args+=(--resource "$f"); done
 
 # Policies that look at the admission request (userInfo, operation) can not be evaluated by the
-# CLI: they show up as errors, not failures. Failures and fatal errors fail the script.
-kyverno apply "$policies" "${args[@]}" --crd-paths "$tmp/crds.yaml" | tee "$tmp/out.txt"
-if grep -q ' failed:' "$tmp/out.txt"; then
+# CLI: they show up as errors, not failures. `kyverno apply` exits 1 on errors too, so its exit
+# code is ignored and the summary line decides: any failure, or no summary (a fatal error), fails
+# the script.
+kyverno apply "$policies" "${args[@]}" --crd-paths "$tmp/crds.yaml" | tee "$tmp/out.txt" || true
+summary=$(grep -E '^pass: [0-9]+, fail: [0-9]+' "$tmp/out.txt" | tail -1)
+if [[ -z $summary ]]; then
+  echo "kyverno: no result summary, the run did not complete" >&2
+  exit 1
+fi
+if [[ ! $summary =~ fail:\ 0, ]] || grep -q ' failed:' "$tmp/out.txt"; then
   echo "kyverno: policy failures above" >&2
   exit 1
 fi
