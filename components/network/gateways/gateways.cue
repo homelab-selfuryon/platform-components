@@ -28,7 +28,7 @@ import (
 		name:        "gateways"
 		description: "GatewayClass, EnvoyProxy, the preview/staging/prod Gateways and their certificates."
 		namespace:   #namespace
-		set:         "policy"
+		set:         "platform"
 		// envoy-gateway owns the namespace and its network policies.
 		createNamespace: false
 		network: policy: false

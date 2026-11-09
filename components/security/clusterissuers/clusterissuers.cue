@@ -31,7 +31,7 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 		name:        "cluster-issuers"
 		description: "Let's Encrypt ClusterIssuers (DNS-01, Cloudflare) and the Cloudflare token sync."
 		namespace:   #namespace
-		set:         "policy"
+		set:         "platform"
 		// cert-manager owns the namespace and its network policies.
 		createNamespace: false
 		network: policy: false

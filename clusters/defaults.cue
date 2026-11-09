@@ -67,7 +67,9 @@ import (
 	config:   _
 	versions: _
 
-	config: sets: ["rbac", "system", "platform", "policy", "tenants"]
+	// The policies come right after what they need (Kyverno, Cilium), before any platform component:
+	// nothing in `platform` (external-dns waiting for a token, say) can hold them back.
+	config: sets: ["rbac", "system", "policy", "platform", "tenants"]
 
 	components: {
 		cilium: (app_cilium.#Cilium & {#cluster: config, #ref: versions.cilium}).component
