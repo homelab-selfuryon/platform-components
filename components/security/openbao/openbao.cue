@@ -41,10 +41,9 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 			ui: enabled:        false
 			server: {
 				enabled: true
-				extraEnvironmentVars: {
-					BAO_ADDR:   "https://127.0.0.1:8200"
-					BAO_CACERT: "\(_tls)/ca.crt"
-				}
+				// BAO_ADDR comes from the chart (https with TLS on); setting it again duplicates the
+				// env entry, which server-side apply rejects.
+				extraEnvironmentVars: BAO_CACERT: "\(_tls)/ca.crt"
 				extraVolumes: [
 					{type: "secret", name: "openbao-tls"},
 					{type: "secret", name: "openbao-seal-key"},
