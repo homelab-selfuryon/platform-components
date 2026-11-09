@@ -90,6 +90,15 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 							}
 
 							service_registration "kubernetes" {}
+
+							# Audit log to the container's stdout (collected with the pod's logs). OpenBao
+							# enables audit devices only from here, not through the API.
+							audit "file" "stdout" {
+							  description = "Audit log to the container's stdout"
+							  options {
+							    file_path = "stdout"
+							  }
+							}
 							"""
 					}
 				}
