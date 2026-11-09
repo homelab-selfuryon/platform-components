@@ -552,7 +552,7 @@ _cnpSpec: {
 					evaluation: background: enabled: false
 					matchConditions: [{
 						name:       "preview-deployer"
-						expression: "request.userInfo.username in \(json.Marshal([for _, t in #teams {"system:serviceaccount:argocd:\(t.previewDeployer)"}]))"
+						expression: "request.userInfo.username in \(json.Marshal([for _, t in #teams {"system:serviceaccount:\(schema.#ArgoCDNamespace):\(t.previewDeployer)"}]))"
 					}]
 					matchConstraints: resourceRules: [{
 						apiGroups:   list.SortStrings([for g, _ in {for k in teams.#DeployKinds {(k.group): true}} {g}])
@@ -561,7 +561,7 @@ _cnpSpec: {
 						resources:   ["*"]
 					}]
 					variables: [
-						{name: "allowed", expression: json.Marshal({for _, t in #teams {"system:serviceaccount:argocd:\(t.previewDeployer)": t.namespaces.previewRegex}})},
+						{name: "allowed", expression: json.Marshal({for _, t in #teams {"system:serviceaccount:\(schema.#ArgoCDNamespace):\(t.previewDeployer)": t.namespaces.previewRegex}})},
 						{name: "target", expression: "request.operation == 'DELETE' ? oldObject : object"},
 						{name: "ns", expression: "variables.target.kind == 'Namespace' ? variables.target.metadata.name : variables.target.metadata.?namespace.orValue('')"},
 					]

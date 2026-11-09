@@ -19,7 +19,7 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 //   - a ClusterRole from the whitelist: verbs on exactly the whitelisted kinds, plus `escalate` and
 //     `bind` on exactly the whitelisted ClusterRoles (create can be restricted by name for those),
 //   - the ServiceAccount `argo-apps`, which the Kustomization of the same name applies the
-//     Applications as (its Role in argocd comes with the argocd component).
+//     Applications as (its Role in argocd-system comes with the argocd component).
 //
 // Names are enforced by admission (policies set), kinds by these roles, the render by
 // `cue cmd check`. `flux-privileged` and `gitops-root` come from bootstrap, not from here.
