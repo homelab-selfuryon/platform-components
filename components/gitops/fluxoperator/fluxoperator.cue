@@ -1,6 +1,7 @@
 package fluxoperator
 
 import (
+	"encoding/yaml"
 	"strings"
 	"github.com/homelab-selfuryon/platform-components/schema"
 )
@@ -62,6 +63,23 @@ import (
 				networkPolicy:               true
 				domain:                      "cluster.local"
 			}
+			// The operator applies flux-system from the distribution (PSA `warn` only) and replaces
+			// the labels bootstrap set: the platform's labels and PSA `enforce`/`audit` go in here.
+			kustomize: patches: [{
+				target: {kind: "Namespace", name: #namespace}
+				patch: yaml.Marshal({
+					apiVersion: "v1"
+					kind:       "Namespace"
+					metadata: {
+						name: #namespace
+						labels: {
+							"\(schema.#Prefix)/managed-by":       "platform"
+							"pod-security.kubernetes.io/enforce": "restricted"
+							"pod-security.kubernetes.io/audit":   "restricted"
+						}
+					}
+				})
+			}]
 		}
 
 		whitelist: [
