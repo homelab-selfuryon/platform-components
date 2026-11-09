@@ -47,6 +47,7 @@ import (
 		manifests: scoped: (#namespace): {
 			envoyProxy: envoy: spec: {
 				mergeGateways: true
+				ipFamily:      "DualStack"
 				provider: {
 					type: "Kubernetes"
 					kubernetes: {
@@ -70,9 +71,13 @@ import (
 								runAsUser:    65532
 							}
 						}
+						// LoadBalancer addresses are the node's (Cilium node IPAM): its ULA and LAN
+						// addresses, both published by external-dns. No NodePorts: they would listen on
+						// every node address, the public prefix included.
 						envoyService: {
-							type:                  "LoadBalancer"
-							externalTrafficPolicy: "Cluster"
+							type:                          "LoadBalancer"
+							externalTrafficPolicy:         "Cluster"
+							allocateLoadBalancerNodePorts: false
 						}
 					}
 				}

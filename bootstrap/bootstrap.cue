@@ -73,12 +73,15 @@ import (
 			}
 
 			kustomization: gitops: spec: {
-				interval:           "5m"
-				retryInterval:      "2m"
-				timeout:            "10m"
-				path:               "./flux"
-				prune:              true
-				wait:               true
+				interval:      "5m"
+				retryInterval: "2m"
+				timeout:       "10m"
+				path:          "./flux"
+				prune:         true
+				// Applies the set Kustomizations and returns: each set has its own health checks and
+				// dependsOn. Waiting here would hold every new revision of gitops (a fix, a rollback)
+				// behind the slowest unready set until the timeout.
+				wait:               false
 				serviceAccountName: "gitops-root"
 				sourceRef:          {kind: "OCIRepository", name: "gitops"}
 			}

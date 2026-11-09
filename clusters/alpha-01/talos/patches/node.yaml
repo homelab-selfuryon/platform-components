@@ -1,7 +1,7 @@
 # Single-node cluster: workloads run on the control plane (no NoSchedule taint).
-# Dual-stack, IPv6 primary. The node IP comes from a stable prefix of the network (not from DHCP
-# or a changing public prefix). Talos uses the primary node IP as the kube-apiserver advertise
-# address.
+# Dual-stack, IPv6 primary. The node IP is the fixed ULA address of network.yaml (not the SLAAC one,
+# not the changing public prefix) and the LAN address. Talos uses the primary node IP as the
+# kube-apiserver advertise address.
 #
 # The node networks are private (an IPv6 ULA prefix and an RFC 1918 LAN), nothing routable from
 # the internet; the public prefix the node also has is deliberately not named here. They must match
@@ -10,7 +10,7 @@ apiVersion: v1alpha1
 kind: KubeNodeConfig
 nodeIP:
   validSubnets:
-    - fdc0:ff20:737b:8::/64
+    - fdc0:ff20:737b:8::181/128
     - 192.168.1.0/24
 labels:
   node-role.kubernetes.io/control-plane: ""
@@ -29,4 +29,4 @@ nodeCIDRMaskSizeIPv4: 24
 cluster:
   etcd:
     advertisedSubnets:
-      - fdc0:ff20:737b:8::/64
+      - fdc0:ff20:737b:8::181/128

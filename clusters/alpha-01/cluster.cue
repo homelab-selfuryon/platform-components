@@ -7,12 +7,13 @@ import "github.com/homelab-selfuryon/platform-components/clusters:defaults"
 _pins: _ @embed(file="pins.json")
 
 // Single-node Talos cluster. Talos machine config lives in ./talos (see talos/gen.sh).
-// The networks are private (IPv6 ULA, RFC 1918 LAN); the domain is still a placeholder.
+// The networks are private (IPv6 ULA, RFC 1918 LAN). The domain's records point at those private
+// addresses: reachable at home and over NetBird only (meta/decisions.md).
 cluster: defaults.#Platform & {
 	config: {
 		name:    "alpha-01"
 		channel: "stable"
-		domain:  "homelab.example"
+		domain:  "homelab.ys7.me"
 		kubernetes: {
 			version: "v1.37.1"
 			apiVersions: [

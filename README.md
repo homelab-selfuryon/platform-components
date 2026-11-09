@@ -118,9 +118,11 @@ offline); platform components that need a Kubernetes Secret get it from the CSI 
 
 ## Placeholders
 
-`homelab.example`, 192.0.2.0/24, 2001:db8::/32, the interface `eth0` and the install disk are
-placeholders until a real domain and network exist (open question in `meta/decisions.md`). The Talos
-patches contain no real address, disk, MAC or serial.
+alpha-01 uses its real private networks (an IPv6 ULA prefix and an RFC 1918 LAN) and the domain
+`homelab.ys7.me`, whose records point at those private addresses (`meta/decisions.md`). Nothing
+public is committed: no public prefix, disk, serial or MAC; the install disk lives in the git-ignored
+`.secrets/talos/<cluster>/local.yaml`. Other examples use `homelab.example`, 192.0.2.0/24 and
+2001:db8::/32.
 
 ## Development
 

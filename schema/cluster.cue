@@ -15,7 +15,7 @@ package schema
 	// Version channel, see registry.#Resolve.
 	channel: *"fast" | "stable"
 
-	// Base domain of the platform (placeholder until a real domain exists).
+	// Base domain of the platform: Gateway hostnames, external-dns records, certificates.
 	domain!: string
 
 	kubernetes: {
@@ -56,8 +56,9 @@ package schema
 		localPath: *"/var/mnt/local-storage" | string
 	}
 
-	// ACME account e-mail for Let's Encrypt (placeholder).
-	acme: email: *"platform@homelab.example" | string
+	// ACME account e-mail for Let's Encrypt. Optional (Let's Encrypt sends no expiry mail any more):
+	// unset, the account has no contact.
+	acme: email?: string
 
 	// Identity of the workflows that sign and publish artifacts (cosign keyless).
 	artifacts: {

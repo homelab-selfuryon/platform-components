@@ -38,8 +38,9 @@ devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies ov
 
 - Conventional Commits, `!` for breaking changes; signed commits. Never touch a live cluster
   (`kubectl apply`, `talosctl apply-config`, `cue cmd bootstrap | kubectl apply`) without the user's go-ahead.
-- Public repository: no secrets, no real addresses, hostnames, disks or MACs; placeholders
-  (`homelab.example`, 192.0.2.0/24, 2001:db8::/32) are marked. Secrets only in OpenBao; the seal key is
+- Public repository: no secrets, no public addresses, disks, serials or MACs. alpha-01's private
+  networks (ULA, LAN) and its domain `homelab.ys7.me` are committed by decision; other examples use
+  placeholders (`homelab.example`, 192.0.2.0/24, 2001:db8::/32). Secrets only in OpenBao; the seal key is
   created by hand at bootstrap.
 - A component declares: `set`, `namespace` (`<name>-system`), `psa` (restricted unless a reason is
   given), `privileged` (+ `reason`), `whitelist` (exact names for ClusterRole(Binding)s), `network`,
