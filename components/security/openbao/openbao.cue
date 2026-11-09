@@ -63,12 +63,15 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 				ha: {
 					enabled:  true
 					replicas: 1
+					// The chart's default is https://$(POD_IP):8200, an invalid URL with an IPv6 pod IP
+					// (no brackets). The pod's name in the headless Service instead: the certificate
+					// covers *.openbao-internal. $(BAO_K8S_POD_NAME) is defined before BAO_API_ADDR.
+					apiAddr: "https://$(BAO_K8S_POD_NAME).openbao-internal:8200"
 					raft: {
 						enabled:   true
 						setNodeId: true
 						config: """
 							ui = false
-							disable_mlock = true
 
 							listener "tcp" {
 							  address         = "[::]:8200"

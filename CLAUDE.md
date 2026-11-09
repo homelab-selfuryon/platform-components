@@ -49,6 +49,11 @@ devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies ov
 - A new cluster-scoped kind or name in a render fails `cue cmd check` until the whitelist lists it:
   `python3 scripts/cluster_scoped.py out/<cluster> <component>` shows what a render contains. Do not
   widen a whitelist to make a check pass without understanding the object.
+- Renaming a component's namespace: the `rbac` set deletes the old namespace with everything in it,
+  and the component's Kustomization then cannot prune its old objects (403: its ServiceAccount has
+  no rights there any more) and stays not Ready. Clear its inventory once, never delete the
+  Kustomization (prune would remove the new install):
+  `kubectl -n flux-system patch kustomization <name> --subresource=status --type=json -p '[{"op":"remove","path":"/status/inventory"}]'`.
 - Versions: `registry/latest.json` (Renovate) -> `cue cmd promote` -> `clusters/<c>/pins.json`.
   Field order in latest.json is a Renovate regex contract.
 - Rendering must stay deterministic: render twice and `diff -r out/<c>` (hidden dirs excluded)
