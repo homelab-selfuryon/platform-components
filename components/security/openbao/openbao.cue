@@ -54,8 +54,12 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 					storageClass: "local-path"
 				}
 				auditStorage: enabled: false
-				// Pod Security restricted: the chart's defaults already drop privileges; the seccomp
-				// profile is part of them.
+				// Pod Security restricted: the chart sets the pod's context (non-root, seccomp) but not
+				// the container's capabilities, which PSA requires dropped.
+				statefulSet: securityContext: container: {
+					allowPrivilegeEscalation: false
+					capabilities: drop: ["ALL"]
+				}
 				ha: {
 					enabled:  true
 					replicas: 1

@@ -287,6 +287,8 @@ _cnpSpec: {
 
 			"tenant-deny-shell-access": spec: {
 				validationActions: ["Deny"]
+				// Reads request.userInfo, which a background scan does not have: admission only.
+				evaluation: background: enabled: false
 				// Break-glass (system:masters) is audited, not blocked.
 				matchConditions: [{name: "not-break-glass", expression: "!('system:masters' in request.userInfo.groups)"}]
 				matchConstraints: {
@@ -330,6 +332,8 @@ _cnpSpec: {
 			// Webhooks, CRDs, ClusterRoles and cluster-wide network policies are the platform's.
 			"tenant-deny-cluster-scoped": spec: {
 				validationActions: ["Deny"]
+				// Reads request.userInfo, which a background scan does not have: admission only.
+				evaluation: background: enabled: false
 				matchConditions: [{
 					name:       "tenant-serviceaccount"
 					expression: "request.userInfo.username.matches('^system:serviceaccount:[a-z0-9]+-(staging|prod|pr-[0-9]+):')"
@@ -403,6 +407,8 @@ _cnpSpec: {
 			// limited by its ClusterRole, names can not be in RBAC.
 			"component-whitelist": spec: {
 				validationActions: ["Deny"]
+				// Reads request.userInfo, which a background scan does not have: admission only.
+				evaluation: background: enabled: false
 				matchConditions: [{
 					name:       "component-serviceaccount"
 					expression: "request.userInfo.username.startsWith('system:serviceaccount:flux-system:component-')"
@@ -430,6 +436,8 @@ _cnpSpec: {
 
 			"component-namespaces": spec: {
 				validationActions: ["Deny"]
+				// Reads request.userInfo, which a background scan does not have: admission only.
+				evaluation: background: enabled: false
 				matchConditions: [{
 					name:       "component-with-namespaces"
 					expression: "request.userInfo.username in \(json.Marshal([for u, _ in _nsRules {u}]))"
@@ -540,6 +548,8 @@ _cnpSpec: {
 			if len(#teams) > 0 {
 				"preview-deployer-scope": spec: {
 					validationActions: ["Deny"]
+					// Reads request.userInfo, which a background scan does not have: admission only.
+					evaluation: background: enabled: false
 					matchConditions: [{
 						name:       "preview-deployer"
 						expression: "request.userInfo.username in \(json.Marshal([for _, t in #teams {"system:serviceaccount:argocd:\(t.previewDeployer)"}]))"
