@@ -33,6 +33,16 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 				reclaimPolicy:     "Delete"
 				volumeBindingMode: "WaitForFirstConsumer"
 			}
+			// The helper pod (creates and deletes volume directories) defaults to busybox:latest,
+			// which disallow-latest-tag rejects: pinned by tag and digest.
+			helperImage: {
+				repository: "docker.io/library/busybox"
+				tag:        "1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec"
+			}
+			helperPod: resources: {
+				requests: {cpu: "10m", memory: "16Mi"}
+				limits: memory: "64Mi"
+			}
 			nodePathMap: [{
 				node:  "DEFAULT_PATH_FOR_NON_LISTED_NODES"
 				paths: [#cluster.storage.localPath]
