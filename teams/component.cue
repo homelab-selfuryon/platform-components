@@ -18,12 +18,12 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 //   <team>-staging, <team>-prod   Namespaces: Pod Security restricted, labels for admission and
 //                                 the Gateways, ResourceQuota, ServiceAccount `deployer` with a
 //                                 Role for the deployable kinds only, `view` for the team's group
-//   argocd                        AppProjects `<team>` (staging, prod: sync as `deployer`) and
+//   argocd-system                 AppProjects `<team>` (staging, prod: sync as `deployer`) and
 //                                 `<team>-preview`
 //   cluster                       ServiceAccount and ClusterRole `<team>-preview-deployer`
 //
 // Preview namespaces `<team>-pr-<n>` do not exist ahead of time: Argo creates them. Argo syncs
-// them as `argocd:<team>-preview-deployer`, whose ClusterRole covers the deployable kinds in every
+// them as `argocd-system:<team>-preview-deployer`, whose ClusterRole covers the deployable kinds in every
 // namespace and Namespace objects, which is far too much for RBAC alone: Kyverno restricts
 // everything that ServiceAccount does to namespaces matching `<team>-pr-<n>` (policy
 // `preview-deployer-scope`), labels such namespaces `env=preview` and generates their default-deny,
@@ -67,8 +67,8 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 				verbs:         ["bind"]
 				resourceNames: ["view"]
 			}]
-			allowedNamespaces: [_t.namespaces.staging, _t.namespaces.prod, "argocd"]
-			namespaced: argocd: [{
+			allowedNamespaces: [_t.namespaces.staging, _t.namespaces.prod, schema.#ArgoCDNamespace]
+			namespaced: (schema.#ArgoCDNamespace): [{
 				apiGroups: ["argoproj.io"]
 				resources: ["appprojects"]
 				verbs:     _verbs
@@ -108,7 +108,7 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 			]
 			clusterRoleBinding: (_t.previewDeployer): {
 				roleRef:  {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole", name: _t.previewDeployer}
-				subjects: [{kind: "ServiceAccount", name: _t.previewDeployer, namespace: "argocd"}]
+				subjects: [{kind: "ServiceAccount", name: _t.previewDeployer, namespace: schema.#ArgoCDNamespace}]
 			}
 		}
 
@@ -139,7 +139,7 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 				}
 			}
 
-			argocd: {
+			(schema.#ArgoCDNamespace): {
 				serviceAccount: (_t.previewDeployer): automountServiceAccountToken: false
 
 				appProject: (_t.name): spec: {
@@ -166,7 +166,7 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 					destinationServiceAccounts: [{
 						server:                _server
 						namespace:             _t.namespaces.previewPattern
-						defaultServiceAccount: "argocd:\(_t.previewDeployer)"
+						defaultServiceAccount: "\(schema.#ArgoCDNamespace):\(_t.previewDeployer)"
 					}]
 				}
 			}

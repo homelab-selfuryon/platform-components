@@ -4,7 +4,7 @@ import (
 	"github.com/homelab-selfuryon/platform-components/schema"
 )
 
-#namespace: "argocd"
+#namespace: schema.#ArgoCDNamespace
 
 // Argo CD for tenants: it syncs the apps' manifest artifacts (OCI, by digest) into their
 // namespaces, impersonating the team's deploy ServiceAccount. Platform components are not
@@ -27,7 +27,6 @@ import (
 		description: "Argo CD for tenant manifests (headless, sync impersonation)."
 		namespace:   #namespace
 		set:         "platform"
-		// argocd is the exception to the `<name>-system` convention (contract: delivery.md).
 
 		chart: schema.#Chart & {
 			#ref: _ref

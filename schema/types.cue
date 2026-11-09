@@ -17,6 +17,10 @@ import (
 // Labels and annotations of the platform.
 #Prefix: "homelab-selfuryon.github.io"
 
+// Namespace of Argo CD: Applications live there and preview syncs run as its ServiceAccounts
+// (contract: meta/delivery.md, gitops schema/render.cue).
+#ArgoCDNamespace: "argocd-system"
+
 _defaultLabels: {
 	"app.kubernetes.io/part-of": "homelab-selfuryon"
 	"\(#Prefix)/managed-by":     *"platform" | string
