@@ -3,15 +3,15 @@
 # or a changing public prefix). Talos uses the primary node IP as the kube-apiserver advertise
 # address.
 #
-# All addresses in this directory are PLACEHOLDERS from the documentation ranges (RFC 5737
-# 192.0.2.0/24, RFC 3849 2001:db8::/32). They must match clusters/alpha-01/cluster.cue (pod and
-# service CIDRs, trustedCIDRs) and gen.sh (NODE).
+# The node networks are private (an IPv6 ULA prefix and an RFC 1918 LAN), nothing routable from
+# the internet; the public prefix the node also has is deliberately not named here. They must match
+# clusters/alpha-01/cluster.cue (pod and service CIDRs, trustedCIDRs) and gen.sh (NODE).
 apiVersion: v1alpha1
 kind: KubeNodeConfig
 nodeIP:
   validSubnets:
-    - 2001:db8:1::/64
-    - 192.0.2.0/24
+    - fdc0:ff20:737b:8::/64
+    - 192.168.1.0/24
 labels:
   node-role.kubernetes.io/control-plane: ""
 ---
@@ -29,4 +29,4 @@ nodeCIDRMaskSizeIPv4: 24
 cluster:
   etcd:
     advertisedSubnets:
-      - 2001:db8:1::/64
+      - fdc0:ff20:737b:8::/64

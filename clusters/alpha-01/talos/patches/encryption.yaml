@@ -1,0 +1,53 @@
+# Disk encryption: LUKS2 on STATE, EPHEMERAL and local-storage, the key sealed to the node's TPM 2.0.
+# The disks are then unreadable outside this machine (and, with Secure Boot, outside an unmodified
+# boot chain). STATE holds the machine config and PKI, EPHEMERAL /var (etcd, containerd, kubelet,
+# pod logs), local-storage the databases and OpenBao's raft data.
+#
+# NOT APPLIED on alpha-01 yet (gen.sh adds it only with ENCRYPT=1): the node was installed without
+# Secure Boot, and Talos encrypts a volume only when it creates it. Turning this on means a
+# reinstall: Secure Boot on in the firmware (setup mode, the SecureBoot ISO enrolls Talos' keys),
+# the `metal-installer-secureboot` installer, `apply-config` with wipe. See meta/decisions.md.
+#
+# The volume documents are replaced, not merged, by a patch: they repeat storage.yaml's provisioning.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: STATE
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true
+---
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: system_disk
+  maxSize: 64GiB
+  grow: false
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-storage
+provisioning:
+  diskSelector:
+    match: system_disk
+  minSize: 10GiB
+  grow: true
+filesystem:
+  type: xfs
+  projectQuotaSupport: true
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true

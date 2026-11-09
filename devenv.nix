@@ -1,5 +1,12 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
+  # Cluster access for bootstrap and break-glass (docs/bootstrap.md): paths only, the files live in
+  # the git-ignored .secrets/ and come from the break-glass bundle.
+  env = {
+    TALOSCONFIG = "${config.devenv.root}/.secrets/talos/alpha-01/talosconfig";
+    KUBECONFIG = "${config.devenv.root}/.secrets/kubernetes/config";
+  };
+
   # CUE, treefmt (nixfmt, prettier, cue fmt), the secret-scanning hooks and the workflow linters come
   # from platform-kit/devenv/cue.nix (imported in devenv.yaml). Only what this repository adds:
   packages = with pkgs; [

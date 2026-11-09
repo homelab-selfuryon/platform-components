@@ -16,9 +16,8 @@ hostDNS:
   forwardKubeDNSToHost: false
 ---
 # IPv6 forwarding is on for pods; keep accepting router advertisements (SLAAC addresses and the
-# IPv6 default route) on the uplink. `eth0` is a placeholder: the interface of your node (it is the
-# same name as `network.devices` in cluster.cue).
+# IPv6 default route) on the uplink, `enp2s0` (the same name as `network.devices` in cluster.cue).
 apiVersion: v1alpha1
 kind: SysctlConfig
 params:
-  net.ipv6.conf.eth0.accept_ra: "2"
+  net.ipv6.conf.enp2s0.accept_ra: "2"
