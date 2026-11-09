@@ -122,9 +122,11 @@ _cnpSpec: {
 	let _issuer = #cluster.artifacts.issuer
 	let _image = "\(#cluster.artifacts.registry)/"
 
-	// username -> what the component's ServiceAccount may create at cluster scope
+	// username -> what the component's ServiceAccount may create at cluster scope; this component
+	// included (it is not in #components, but its own Kustomization applies the policies as
+	// component-kyverno-policies)
 	let _whitelists = {
-		for _, c in _all if !c.privileged && len(c.whitelist) > 0 {
+		for _, c in list.Concat([[for _, c in _all {c}], [component]]) if !c.privileged && len(c.whitelist) > 0 {
 			"system:serviceaccount:flux-system:component-\(c.name)": [for w in c.whitelist {
 				g: w.apiGroup
 				k: w.kind
@@ -140,6 +142,16 @@ _cnpSpec: {
 	let _wlResources = {
 		for _, c in _all if !c.privileged for w in c.whitelist {
 			(w.apiGroup): (w.resource): true
+		}
+
+		// This component's own kinds, spelled out: derived from its whitelist they would make
+		// component-whitelist depend on itself.
+		"rbac.authorization.k8s.io": clusterroles: true
+		"policies.kyverno.io": {
+			validatingpolicies:      true
+			imagevalidatingpolicies: true
+			generatingpolicies:      true
+			deletingpolicies:        true
 		}
 	}
 
@@ -162,6 +174,8 @@ _cnpSpec: {
 		"argo-apps": "argo-apps"
 		// Bootstrap-time sibling: the rbac set itself runs privileged.
 		rbac: "flux-privileged"
+		// This component (not in #components)
+		"kyverno-policies": "component-kyverno-policies"
 		for s in _sets {"set-\(s)": "gitops-root"}
 		for _, c in _all {
 			(c.name): [if c.privileged {"flux-privileged"}, "component-\(c.name)"][0]

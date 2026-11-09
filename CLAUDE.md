@@ -68,6 +68,8 @@ other (see `_base` in `clusters/defaults.cue`). The module is language v0.18.0, 
 
 CEL policies (`policies.kyverno.io/v1`: ValidatingPolicy, ImageValidatingPolicy, GeneratingPolicy,
 DeletingPolicy), Enforce; `kyverno.io/v1 ClusterPolicy` is deprecated, add none. Test expressions with
-`kyverno apply` (it type-checks them; policies that read `request.userInfo` show as errors in the CLI,
-not failures). Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
+`scripts/kyverno-check.sh` (it type-checks them): policies that read `request.userInfo` run once per
+component with `--userinfo` as its Flux ServiceAccount; every run must end with no failures and no
+errors. The CLI does not apply policies to Kyverno's own policy kinds, so `component-whitelist` on
+`kyverno-policies` itself is only enforced in the cluster. Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
 admission selects on that label and on `.../env`, which only the platform sets.
