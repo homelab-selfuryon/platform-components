@@ -10,16 +10,17 @@ Nothing here runs from CI. Never apply anything to a live cluster without decidi
 
 ## 0. Before you start
 
-- A fork or checkout where the placeholders are replaced: node addresses, interface name and disk
-  in `clusters/<cluster>/talos/patches/`, `trustedCIDRs`, `devices` and `domain` in
-  `clusters/<cluster>/cluster.cue` (the documentation ranges 192.0.2.0/24 and 2001:db8::/32 and
-  `homelab.example` are placeholders).
+- The cluster's networks in `clusters/<cluster>/talos/patches/node.yaml` and `cluster.cue`
+  (`trustedCIDRs`, `devices`; alpha-01 uses private ranges only, its domain is still the placeholder
+  `homelab.example`). What must not be public, like the install disk's serial, goes into
+  `.secrets/talos/<cluster>/local.yaml` (git-ignored), which `gen.sh` adds as a last patch.
 - The artifacts exist: `gitops` has published `ghcr.io/homelab-selfuryon/gitops/<cluster>:main`, and
   `platform-components` has released the sets it points to (a merged release PR in `gitops`).
   The packages are public (Flux and Argo CD pull anonymously).
 - `devenv shell` (cue, helm, talosctl, kubectl, flux, age, ...). No toolchain is installed globally.
-- Secure Boot enabled in the node's firmware, TPM 2.0 present: the disk encryption keys are sealed
-  to it (`talos/patches/storage.yaml`).
+- For disk encryption (`ENCRYPT=1 ./gen.sh`, `talos/patches/encryption.yaml`): Secure Boot enabled in
+  the firmware and TPM 2.0 present, the keys are sealed to it, and a fresh install (Talos encrypts
+  a volume only when it creates it). alpha-01 runs without it for now (meta `decisions.md`).
 - A place for the **break-glass bundle**: an age-encrypted archive, the age identity on a hardware
   token, copies off the machine. It holds `talosconfig`, the admin `kubeconfig`, `secrets.yaml`
   (Talos cluster secrets), the OpenBao seal key and, later, the OpenBao recovery keys.
@@ -29,14 +30,18 @@ Nothing here runs from CI. Never apply anything to a live cluster without decidi
 ```bash
 cd clusters/alpha-01/talos
 NODE=<node address> ./gen.sh          # writes .secrets/talos/<cluster>/ (git-ignored): controlplane.yaml, talosconfig, secrets.yaml
+# A running node: render elsewhere with its secrets and look at the difference first
+NODE=<node address> OUT_DIR=$(mktemp -d) SECRETS=$PWD/../../../.secrets/talos/alpha-01/secrets.yaml ./gen.sh
+talosctl apply-config --dry-run -f <that dir>/controlplane.yaml
 talosctl apply-config --insecure -n <node address> -f ../../../.secrets/talos/alpha-01/controlplane.yaml
 talosctl --talosconfig .secrets/talos/alpha-01/talosconfig bootstrap      # once: etcd
 talosctl --talosconfig .secrets/talos/alpha-01/talosconfig kubeconfig .secrets/kubernetes/config
 ```
 
-Move `.secrets/` into the break-glass bundle now. The TPM-sealed STATE and EPHEMERAL volumes mean
-the node's disks are useless if it is stolen; they also mean a motherboard or firmware change needs
-the break-glass recovery path below.
+Move `.secrets/` into the break-glass bundle now. `devenv shell` points `TALOSCONFIG` and
+`KUBECONFIG` at `.secrets/` (paths only). With encryption, the TPM-sealed volumes mean the node's
+disks are useless if it is stolen; they also mean a motherboard or firmware change needs the
+break-glass recovery path below.
 
 The node stays `NotReady` until Cilium runs.
 
