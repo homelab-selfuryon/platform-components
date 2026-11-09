@@ -21,3 +21,17 @@ apiVersion: v1alpha1
 kind: SysctlConfig
 params:
   net.ipv6.conf.enp2s0.accept_ra: "2"
+---
+# A fixed ULA address next to the SLAAC one: the node IP, the API endpoint and the Gateway's
+# address in DNS. The SLAAC address is derived from the MAC (EUI-64) and must not be published.
+# Naming the link turns off Talos' implicit DHCP on it, so DHCPv4 for the LAN address is explicit.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: enp2s0
+up: true
+addresses:
+  - address: fdc0:ff20:737b:8::181/64
+---
+apiVersion: v1alpha1
+kind: DHCPv4Config
+name: enp2s0

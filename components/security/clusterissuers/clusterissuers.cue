@@ -22,7 +22,7 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 	}).out
 
 	let _acme = {
-		email: #cluster.acme.email
+		if #cluster.acme.email != _|_ {email: #cluster.acme.email}
 		privateKeySecretRef: name: string
 		solvers: [{dns01: cloudflare: apiTokenSecretRef: {name: "cloudflare-api-token", key: "api-token"}}]
 	}

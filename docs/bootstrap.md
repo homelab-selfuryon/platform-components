@@ -11,8 +11,8 @@ Nothing here runs from CI. Never apply anything to a live cluster without decidi
 ## 0. Before you start
 
 - The cluster's networks in `clusters/<cluster>/talos/patches/node.yaml` and `cluster.cue`
-  (`trustedCIDRs`, `devices`; alpha-01 uses private ranges only, its domain is still the placeholder
-  `homelab.example`). What must not be public, like the install disk's serial, goes into
+  (`trustedCIDRs`, `devices`; alpha-01 uses private ranges only and a fixed ULA node address,
+  `talos/patches/network.yaml`). What must not be public, like the install disk's serial, goes into
   `.secrets/talos/<cluster>/local.yaml` (git-ignored), which `gen.sh` adds as a last patch.
 - The artifacts exist: `gitops` has published `ghcr.io/homelab-selfuryon/gitops/<cluster>:main`, and
   `platform-components` has released the sets it points to (a merged release PR in `gitops`).
@@ -44,6 +44,11 @@ disks are useless if it is stolen; they also mean a motherboard or firmware chan
 break-glass recovery path below.
 
 The node stays `NotReady` until Cilium runs.
+
+Changing the node address of a running node (the fixed ULA address in `network.yaml`, the node IP
+in `node.yaml`): render with the new `NODE` into a scratch directory as above, `apply-config` it
+through the current endpoint, then run `NODE=<new address> ./gen.sh` for the new talosconfig and
+fetch the kubeconfig again; the API server certificate gains the new address.
 
 ## 2. Cilium, Flux, the `gitops` artifact
 
