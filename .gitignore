@@ -1,0 +1,22 @@
+
+# Render output and CI scratch
+/out/
+
+# Never commit: Talos secrets, generated machine configs, kubeconfigs, break-glass material
+.secrets/
+**/controlplane.yaml
+**/worker.yaml
+**/talosconfig
+**/secrets.yaml
+**/kubeconfig
+
+# Claude
+.claude/settings.local.json
+.claude/worktrees/
+
+# devenv
+.devenv*
+devenv.local.nix
+.pre-commit-config.yaml
+__pycache__/
+*.pyc

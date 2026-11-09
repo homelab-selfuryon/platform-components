@@ -1,0 +1,175 @@
+name: Check
+
+# Pull requests: per cluster `cue cmd render` and `cue cmd check` (cluster-scoped whitelist),
+# kubeconform, the Kyverno policies over the render (scripts/kyverno-check.sh), the object diff against
+# the base branch as a PR comment, and the workflow lint. Everything runs through this repository's
+# devenv (`devenv shell -- ...`); the render takes a minute or two. Nothing here is signed, so it is
+# this repository's own workflow. `final-check` is the single required status check of the branch ruleset.
+
+on:
+  pull_request:
+
+permissions: {}
+
+env:
+  DEVENV_VERSION: v2.4.0
+
+jobs:
+  prepare:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      clusters: ${{ steps.list.outputs.clusters }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: devenv # read-only: the public devenv cache, no auth token
+      - name: Install devenv
+        run: |
+          nix profile install --accept-flake-config --profile "$RUNNER_TEMP/devenv" "github:cachix/devenv/${DEVENV_VERSION}#devenv"
+          echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
+
+      - name: List clusters
+        id: list
+        run: |
+          set -euo pipefail
+          # [{"name": "alpha-01", "publish": true, "sets": [...]}, ...]
+          clusters=$(devenv shell -- cue cmd clusters | jq -c '[.[].name]')
+          jq -e 'all(.[]; test("^[a-z][a-z0-9-]{1,40}$"))' <<<"$clusters" > /dev/null
+          echo "clusters=${clusters}" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: prepare
+    if: needs.prepare.outputs.clusters != '[]'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      pull-requests: write # the diff comment
+    strategy:
+      matrix:
+        cluster: ${{ fromJson(needs.prepare.outputs.clusters) }}
+      fail-fast: false
+    concurrency:
+      group: components-check-${{ github.event.pull_request.number }}-${{ matrix.cluster }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: head
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: base
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: devenv # read-only: the public devenv cache, no auth token
+      - name: Install devenv
+        run: |
+          nix profile install --accept-flake-config --profile "$RUNNER_TEMP/devenv" "github:cachix/devenv/${DEVENV_VERSION}#devenv"
+          echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
+
+      - name: Render and check
+        working-directory: head
+        run: |
+          set -euo pipefail
+          devenv shell -- cue cmd render -t "cluster=${CLUSTER}"
+          devenv shell -- cue cmd check -t "cluster=${CLUSTER}"
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+
+      - name: kubeconform
+        working-directory: head
+        run: |
+          set -euo pipefail
+          find "out/${CLUSTER}" -type f \( -name manifests.yaml -o -name kustomizations.yaml \) -not -path '*/.work/*' -not -path '*/.bootstrap/*' -print0 |
+            xargs -0 --no-run-if-empty devenv shell -- kubeconform -strict -summary -ignore-missing-schemas \
+              -schema-location default \
+              -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+
+      # The rendered policies run over everything else the repository renders; the wrapper adds the
+      # CRDs the render does not contain (Cilium).
+      - name: Kyverno
+        working-directory: head
+        run: devenv shell -- scripts/kyverno-check.sh "$CLUSTER"
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+
+      # Every render is split into one file per object (<set>/<namespace>/<kind>/<name>.yml), so the
+      # diff shows objects, not file offsets. A cluster missing on the base side renders as empty.
+      # The base branch is rendered with the head's devenv.
+      - name: Render the base branch
+        working-directory: head
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2016 # expanded by the inner shell
+          if devenv shell -- bash -c 'cd ../base && cue cmd render -t "cluster=${CLUSTER}"'; then
+            echo "base rendered"
+          else
+            echo "::notice::${CLUSTER} does not render on the base branch, the diff shows everything as new"
+            rm -rf ../base/out
+          fi
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+
+      - name: Lay out objects
+        run: |
+          set -euo pipefail
+          for side in base head; do
+            mkdir -p "$RUNNER_TEMP/diff/$side"
+            [[ -d "$side/out/${CLUSTER}" ]] || continue
+            while IFS= read -r -d '' f; do
+              rel=$(dirname "${f#"$side/out/${CLUSTER}/"}" | tr -c 'A-Za-z0-9._/-' _)
+              (cd "$RUNNER_TEMP/diff/$side" && PREFIX="$rel" yq -P -s \
+                'strenv(PREFIX) + "/" + (.metadata.namespace // "_cluster") + "/" + (.kind | downcase) + "/" + .metadata.name' \
+                'select(.kind != null) | sort_keys(..)' "$GITHUB_WORKSPACE/$f")
+            done < <(find "$side/out/${CLUSTER}" -type f -name '*.yaml' ! -name kustomization.yaml -not -path '*/.work/*' -not -path '*/.bootstrap/*' -print0)
+          done
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+
+      - name: Generate diff
+        id: diff
+        uses: int128/diff-action@274034d712aef611adcbd41e5a647f43e4edd5a5 # v2.41.0
+        with:
+          head: ${{ runner.temp }}/diff/head
+          base: ${{ runner.temp }}/diff/base
+
+      - uses: int128/comment-action@57130c0b08c149c4ba778ea2dbf5d9e2ac5d1917 # v1.79.0
+        if: steps.diff.outputs.comment-body != ''
+        with:
+          update-if-exists: replace
+          update-if-exists-key: ${{ matrix.cluster }}
+          post: |
+            ## Object diff: `${{ matrix.cluster }}`
+            ${{ steps.diff.outputs.comment-body }}
+
+  lint:
+    permissions:
+      contents: read
+    uses: homelab-selfuryon/github-workflows/.github/workflows/lint-workflows.yaml@v1.0.1
+
+  final-check:
+    if: always()
+    needs: [prepare, check, lint]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Every job succeeded or was skipped
+        run: |
+          [[ "$NEEDS" == *'"result": "failure"'* || "$NEEDS" == *'"result": "cancelled"'* ]] && { echo "$NEEDS"; exit 1; }
+          exit 0
+        env:
+          NEEDS: ${{ toJSON(needs) }}

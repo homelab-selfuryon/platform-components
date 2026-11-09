@@ -1,0 +1,100 @@
+{
+  "components": [
+    {
+      "name": "cilium",
+      "datasource": "helm",
+      "package": "cilium",
+      "registry": "https://helm.cilium.io",
+      "version": "1.20.4"
+    },
+    {
+      "name": "flux-operator",
+      "datasource": "docker",
+      "package": "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
+      "version": "0.62.1",
+      "digest": "sha256:1135514a01cc11e206f5ff0b568ac30d9defd675022b7a9da88d4a3474fbdf13"
+    },
+    {
+      "name": "flux",
+      "datasource": "github-releases",
+      "package": "fluxcd/flux2",
+      "version": "v2.10.0"
+    },
+    {
+      "name": "kyverno",
+      "datasource": "docker",
+      "package": "ghcr.io/kyverno/charts/kyverno",
+      "version": "3.9.2",
+      "digest": "sha256:83054f30148c3cfc001087c1f5772eda7c7224e9b74b7f0e70c39c9cafe009d1"
+    },
+    {
+      "name": "gateway-api",
+      "datasource": "docker",
+      "package": "docker.io/envoyproxy/gateway-crds-helm",
+      "version": "1.10.0",
+      "digest": "sha256:494cc4b63dcb1c828e64a3af2b10e5519f6c11035eba98f331854eb0c04b9d74"
+    },
+    {
+      "name": "cert-manager",
+      "datasource": "docker",
+      "package": "quay.io/jetstack/charts/cert-manager",
+      "version": "v1.21.3",
+      "digest": "sha256:e482675aec32862d323a9218293ff7de81192337998615e4378c56498473f240"
+    },
+    {
+      "name": "local-path-provisioner",
+      "datasource": "github-tags",
+      "package": "rancher/local-path-provisioner",
+      "version": "v0.0.37"
+    },
+    {
+      "name": "metrics-server",
+      "datasource": "helm",
+      "package": "metrics-server",
+      "registry": "https://kubernetes-sigs.github.io/metrics-server/",
+      "version": "3.14.0"
+    },
+    {
+      "name": "envoy-gateway",
+      "datasource": "docker",
+      "package": "docker.io/envoyproxy/gateway-helm",
+      "version": "1.10.0",
+      "digest": "sha256:62fe8cca72a8770bb33900dd5c0990011ab98f2d6f4420c449ce44b1ca4eebe6"
+    },
+    {
+      "name": "external-dns",
+      "datasource": "helm",
+      "package": "external-dns",
+      "registry": "https://kubernetes-sigs.github.io/external-dns/",
+      "version": "1.23.0"
+    },
+    {
+      "name": "cnpg",
+      "datasource": "helm",
+      "package": "cloudnative-pg",
+      "registry": "https://cloudnative-pg.github.io/charts",
+      "version": "0.29.1"
+    },
+    {
+      "name": "secrets-store-csi-driver",
+      "datasource": "helm",
+      "package": "secrets-store-csi-driver",
+      "registry": "https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts",
+      "version": "1.6.2"
+    },
+    {
+      "name": "openbao",
+      "datasource": "helm",
+      "package": "openbao",
+      "registry": "https://openbao.github.io/openbao-helm",
+      "version": "0.30.7"
+    },
+    {
+      "name": "argocd",
+      "datasource": "docker",
+      "package": "ghcr.io/argoproj/argo-helm/argo-cd",
+      "version": "10.15.0",
+      "digest": "sha256:9c827f27e4d587b191b1e9becadc472bbaeb0ca0a18608425ba0ee4915d4ee48"
+    }
+  ]
+}

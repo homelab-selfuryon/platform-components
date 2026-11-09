@@ -1,0 +1,5 @@
+# Everything here is cluster-scoped: the platform team reviews all of it.
+*                      @homelab-selfuryon/platform
+
+# Onboarding of a team: the team reads along but the platform approves.
+/teams/                @homelab-selfuryon/platform

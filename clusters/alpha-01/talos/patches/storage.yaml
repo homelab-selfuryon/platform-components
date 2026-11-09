@@ -1,0 +1,63 @@
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+installer:
+  # Vanilla (empty) schematic of the Image Factory: no extensions. Pin your own schematic ID if
+  # you need extensions, and keep the version in step with talosctl.
+  image: factory.talos.dev/metal-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.5
+provisioning:
+  # PLACEHOLDER: the install disk, matched by a stable symlink so a USB stick is never picked.
+  # `talosctl get disks --insecure -n <node>` lists them.
+  diskSelector:
+    match: "'/dev/disk/by-id/REPLACE-WITH-DISK-ID' in disk.symlinks"
+  wipe: true
+---
+# The system partitions are encrypted with LUKS2 and the key is sealed to the node's TPM 2.0: the
+# disks are unreadable outside this machine (and, with Secure Boot, outside an unmodified boot
+# chain). STATE holds the machine config and PKI, EPHEMERAL /var (etcd, containerd, kubelet, pod
+# logs). `checkSecurebootStatusOnEnroll` ties the sealing to Secure Boot being on at enrolment:
+# turn Secure Boot on in the firmware first (docs/bootstrap.md).
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: STATE
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true
+---
+# Cap /var so the rest of the system disk is left for local storage.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: system_disk
+  maxSize: 64GiB
+  grow: false
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true
+---
+# Mounted at /var/mnt/local-storage (backs the local-path StorageClass), takes the remaining space
+# on the system disk. Encrypted the same way: it holds the databases and OpenBao's raft data.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-storage
+provisioning:
+  diskSelector:
+    match: system_disk
+  minSize: 10GiB
+  grow: true
+filesystem:
+  type: xfs
+  projectQuotaSupport: true
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm:
+        checkSecurebootStatusOnEnroll: true

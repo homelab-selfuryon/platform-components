@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["local>homelab-selfuryon/.github"],
+  "customManagers": [
+    {
+      "description": "Component versions of the `fast` channel. Each entry names its Renovate datasource and package; helm entries carry the repository URL, OCI charts the digest of the chart.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^registry/latest\\.json$/"],
+      "matchStrings": [
+        "\"datasource\":\\s*\"(?<datasource>[^\"]+)\",\\s*\"package\":\\s*\"(?<depName>[^\"]+)\",(?:\\s*\"registry\":\\s*\"(?<registryUrl>[^\"]+)\",)?\\s*\"version\":\\s*\"(?<currentValue>[^\"]+)\"(?:,\\s*\"digest\":\\s*\"(?<currentDigest>sha256:[0-9a-f]{64})\")?"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "The Gateway API/Envoy Gateway CRDs and the controller are released together: bump them in one PR.",
+      "matchPackageNames": [
+        "docker.io/envoyproxy/gateway-crds-helm",
+        "docker.io/envoyproxy/gateway-helm"
+      ],
+      "groupName": "envoy-gateway"
+    }
+  ]
+}

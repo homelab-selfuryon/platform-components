@@ -1,0 +1,74 @@
+name: Promote
+
+# Moves component versions into a cluster's pins.json through a PR: from registry/latest.json
+# (Renovate keeps it current) or from what another cluster currently runs (alpha-01 -> the next
+# cluster). `cue cmd promote`, see ext_tool.cue. The PR is the review: its checks render the
+# cluster, check the whitelists and show the object diff.
+#
+# The PR is opened with GITHUB_TOKEN (same repository, no cross-repository access needed), so
+# GitHub does not start the PR checks by itself: push an empty commit or close and reopen the PR
+# once to run them.
+
+on:
+  workflow_dispatch:
+    inputs:
+      to:
+        description: "Target cluster"
+        required: true
+        default: alpha-01
+      from:
+        description: "Source: 'latest' or a cluster name"
+        required: true
+        default: latest
+      components:
+        description: "Comma-separated components (empty: all the target runs)"
+        required: false
+        default: ""
+
+permissions: {}
+
+env:
+  GOGC: "200"
+  NIXPKGS_REV: f9a75f41be3a74eab55d3a7679d34ad6cc0da977
+
+jobs:
+  promote:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: write # the branch
+      pull-requests: write # the PR
+    steps:
+      - name: Validate inputs
+        run: |
+          [[ "$TO" =~ ^[a-z][a-z0-9-]{1,40}$ ]] || { echo "bad target"; exit 1; }
+          [[ "$FROM" == latest || "$FROM" =~ ^[a-z][a-z0-9-]{1,40}$ ]] || { echo "bad source"; exit 1; }
+          [[ -z "$COMPONENTS" || "$COMPONENTS" =~ ^[a-z0-9,-]+$ ]] || { echo "bad component list"; exit 1; }
+        env:
+          TO: ${{ inputs.to }}
+          FROM: ${{ inputs.from }}
+          COMPONENTS: ${{ inputs.components }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+      - name: Install devenv
+        run: nix profile install --profile "$RUNNER_TEMP/devenv" "github:NixOS/nixpkgs/${NIXPKGS_REV}#devenv" && echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
+
+      - name: Promote versions
+        run: devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS"
+        env:
+          TO: ${{ inputs.to }}
+          FROM: ${{ inputs.from }}
+          COMPONENTS: ${{ inputs.components }}
+
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: promote/${{ inputs.to }}
+          sign-commits: true
+          delete-branch: true
+          add-paths: clusters/${{ inputs.to }}/pins.json
+          title: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
+          commit-message: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
+          body: "Updates `clusters/${{ inputs.to }}/pins.json` with `cue cmd promote` (source: `${{ inputs.from }}`)."

@@ -1,0 +1,16 @@
+{
+  "cilium": "1.20.4",
+  "flux-operator": "0.62.1@sha256:1135514a01cc11e206f5ff0b568ac30d9defd675022b7a9da88d4a3474fbdf13",
+  "flux": "v2.10.0",
+  "kyverno": "3.9.2@sha256:83054f30148c3cfc001087c1f5772eda7c7224e9b74b7f0e70c39c9cafe009d1",
+  "gateway-api": "1.10.0@sha256:494cc4b63dcb1c828e64a3af2b10e5519f6c11035eba98f331854eb0c04b9d74",
+  "cert-manager": "v1.21.3@sha256:e482675aec32862d323a9218293ff7de81192337998615e4378c56498473f240",
+  "local-path-provisioner": "v0.0.37",
+  "metrics-server": "3.14.0",
+  "envoy-gateway": "1.10.0@sha256:62fe8cca72a8770bb33900dd5c0990011ab98f2d6f4420c449ce44b1ca4eebe6",
+  "external-dns": "1.23.0",
+  "cnpg": "0.29.1",
+  "secrets-store-csi-driver": "1.6.2",
+  "openbao": "0.30.7",
+  "argocd": "10.15.0@sha256:9c827f27e4d587b191b1e9becadc472bbaeb0ca0a18608425ba0ee4915d4ee48"
+}

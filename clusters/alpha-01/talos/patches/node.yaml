@@ -1,0 +1,32 @@
+# Single-node cluster: workloads run on the control plane (no NoSchedule taint).
+# Dual-stack, IPv6 primary. The node IP comes from a stable prefix of the network (not from DHCP
+# or a changing public prefix). Talos uses the primary node IP as the kube-apiserver advertise
+# address.
+#
+# All addresses in this directory are PLACEHOLDERS from the documentation ranges (RFC 5737
+# 192.0.2.0/24, RFC 3849 2001:db8::/32). They must match clusters/alpha-01/cluster.cue (pod and
+# service CIDRs, trustedCIDRs) and gen.sh (NODE).
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - 2001:db8:1::/64
+    - 192.0.2.0/24
+labels:
+  node-role.kubernetes.io/control-plane: ""
+---
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets:
+  - fd00:10:244::/56
+  - 10.244.0.0/16
+serviceSubnets:
+  - fd00:10:96::/112
+  - 10.96.0.0/12
+nodeCIDRMaskSizeIPv6: 64
+nodeCIDRMaskSizeIPv4: 24
+---
+cluster:
+  etcd:
+    advertisedSubnets:
+      - 2001:db8:1::/64
