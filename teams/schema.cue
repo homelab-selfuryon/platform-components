@@ -17,8 +17,10 @@ package teams
 		preview: #Quota
 	}
 
-	// Source of the team's manifest artifacts: `oci://ghcr.io/homelab-selfuryon/<team>-*`.
-	sourceRepos: *["oci://ghcr.io/homelab-selfuryon/\(name)-*"] | [...string]
+	// Source of the team's manifest artifacts: `oci://ghcr.io/homelab-selfuryon/<app>/manifests` of apps
+	// named `<team>-*`. Argo CD matches the glob with `/` as separator, so `*` stays inside one path
+	// segment and `/manifests` must be spelled out.
+	sourceRepos: *["oci://ghcr.io/homelab-selfuryon/\(name)-*/manifests"] | [...string]
 
 	// Names used by the render (and by the policies that restrict them).
 	deployer:        "deployer"
