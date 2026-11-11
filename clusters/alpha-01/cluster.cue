@@ -31,8 +31,8 @@ cluster: defaults.#Platform & {
 			// Networks that may reach Talos API and kube-apiserver through the host firewall: the
 			// home ULA site prefix and the LAN.
 			trustedCIDRs: ["fdc0:ff20:737b::/48", "192.168.1.0/24"]
-			// Rollout of the host firewall and default-deny: log, do not drop.
-			policyAudit: true
+			// The home ULA site reaches pods directly (route fd00:10:244::/56 via the node).
+			podAccessCIDRs: ["fdc0:ff20:737b::/48"]
 		}
 	}
 	#pins: _pins
