@@ -732,6 +732,10 @@ _cnpSpec: {
 			}]
 		}
 
+		// Its own policy kinds: any name. With exact names a new policy is refused by the
+		// component-whitelist still running in the cluster (it does not know the name yet) and the
+		// whole set stops. This component is the only source of policies and the render is reviewed
+		// here; the ClusterRoles keep exact names.
 		whitelist: [
 			schema.#ClusterRole & {names: ["kyverno:generate-tenant-defaults", "kyverno:cleanup-pods"]},
 			for key, spec in {
@@ -744,7 +748,7 @@ _cnpSpec: {
 					apiGroup: "policies.kyverno.io"
 					kind:     spec.kind
 					resource: spec.resource
-					names:    list.SortStrings([for n, _ in component.manifests.global[key] {n}])
+					names:    ["*"]
 				}
 			},
 		]
