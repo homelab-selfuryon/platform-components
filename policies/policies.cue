@@ -19,7 +19,7 @@ import (
 //     disallow-latest-tag, restrict-image-registries, disallow-default-namespace,
 //     restrict-service-exposure, require-requests-limits (Audit), cleanup-finished-pods
 //   Tenant namespaces (label homelab-selfuryon.github.io/team)
-//     tenant-images-by-digest        images ghcr.io/homelab-selfuryon/*@sha256 only
+//     tenant-images-by-digest        images ghcr.io/homelab-selfuryon/*@sha256, plus operators' tenantImages
 //     tenant-image-signatures-*      cosign keyless identity per environment (ImageValidatingPolicy):
 //                                    staging/prod: app-release.yaml, preview: app-preview.yaml
 //     tenant-deny-shell-access       no exec, attach, port-forward, ephemeral containers
@@ -27,6 +27,7 @@ import (
 //     tenant-deny-cluster-scoped     no webhooks, CRDs, ClusterRoles, CiliumClusterwideNetworkPolicies
 //                                    from ServiceAccounts of tenant namespaces
 //     tenant-namespace-labels        Pod Security restricted, name matches team and environment
+//     tenant-postgres-clusters       CNPG Clusters: images from the platform catalog, no superuser
 //     tenant-default-deny / tenant-default-limits   generated per tenant namespace
 //     preview-quota-<team>           generated per preview namespace
 //     preview-deployer-scope         the preview deploy ServiceAccount acts in <team>-pr-<n> only
@@ -121,6 +122,9 @@ _cnpSpec: {
 	let _wf = #cluster.artifacts.workflows
 	let _issuer = #cluster.artifacts.issuer
 	let _image = "\(#cluster.artifacts.registry)/"
+
+	// Foreign images tenant pods may run: the workload images of platform operators (cnpg).
+	let _tenantImages = json.Marshal(list.SortStrings([for _, c in _all for i in c.tenantImages {i}]))
 
 	// username -> what the component's ServiceAccount may create at cluster scope; this component
 	// included (it is not in #components, but its own Kustomization applies the policies as
@@ -279,9 +283,11 @@ _cnpSpec: {
 			"tenant-images-by-digest": spec: _pods & {
 				validationActions: ["Deny"]
 				matchConstraints: namespaceSelector: _tenantNS
+				// The first variable is _pods' `containers`.
+				variables: [{}, {name: "platformImages", expression: _tenantImages}]
 				validations: [{
-					expression: "variables.containers.all(c, c.image.startsWith('\(_image)') && c.image.matches('@sha256:[0-9a-f]{64}$'))"
-					message:    "Tenant images must come from \(_image) and be pinned by digest (@sha256:...)."
+					expression: "variables.containers.all(c, (c.image.startsWith('\(_image)') && c.image.matches('@sha256:[0-9a-f]{64}$')) || c.image in variables.platformImages)"
+					message:    "Tenant images must come from \(_image) and be pinned by digest (@sha256:...), or be one of the platform operators' images (tenantImages)."
 				}]
 			}
 
@@ -400,6 +406,28 @@ _cnpSpec: {
 						message:    "Preview namespaces (<team>-pr-<n>) need the team label and env=preview."
 					},
 				]
+			}
+
+			// PostgreSQL in tenant namespaces: images from the platform's catalog only, no superuser.
+			"tenant-postgres-clusters": spec: {
+				validationActions: ["Deny"]
+				evaluation: background: enabled: true
+				matchConstraints: {
+					namespaceSelector: _tenantNS
+					resourceRules: [{
+						apiGroups:   ["postgresql.cnpg.io"]
+						apiVersions: ["v1"]
+						operations:  ["CREATE", "UPDATE"]
+						resources:   ["clusters"]
+					}]
+				}
+				validations: [{
+					expression: "!has(object.spec.imageName) && object.spec.?imageCatalogRef.kind.orValue('') == 'ClusterImageCatalog' && object.spec.?imageCatalogRef.name.orValue('') == '\(schema.#PostgresImageCatalog)'"
+					message:    "Tenant PostgreSQL clusters take their image from the ClusterImageCatalog '\(schema.#PostgresImageCatalog)' (spec.imageCatalogRef), not spec.imageName."
+				}, {
+					expression: "!object.spec.?enableSuperuserAccess.orValue(false)"
+					message:    "Tenant PostgreSQL clusters run without superuser access (spec.enableSuperuserAccess)."
+				}]
 			}
 
 			// ---- Platform ----------------------------------------------------------------------

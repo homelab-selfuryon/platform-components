@@ -19,6 +19,14 @@
         "docker.io/envoyproxy/gateway-helm"
       ],
       "groupName": "envoy-gateway"
+    },
+    {
+      "description": "The CloudNativePG chart and the operator image it runs (pinned by digest for the tenant image policy) move together.",
+      "matchPackageNames": [
+        "cloudnative-pg",
+        "ghcr.io/cloudnative-pg/cloudnative-pg"
+      ],
+      "groupName": "cloudnative-pg"
     }
   ]
 }

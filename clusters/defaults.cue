@@ -88,7 +88,7 @@ import (
 		"metrics-server":           (app_metricsserver.#MetricsServer & {#cluster: config, #ref: versions["metrics-server"]}).component
 		"envoy-gateway":            (app_envoygateway.#EnvoyGateway & {#cluster: config, #ref: versions["envoy-gateway"]}).component
 		"external-dns":             (app_externaldns.#ExternalDNS & {#cluster: config, #ref: versions["external-dns"]}).component
-		cnpg:                       (app_cnpg.#CNPG & {#cluster: config, #ref: versions.cnpg}).component
+		cnpg:                       (app_cnpg.#CNPG & {#cluster: config, #ref: versions.cnpg, #operatorRef: versions["cnpg-operator"], #postgresRef: versions.postgresql}).component
 		"secrets-store-csi-driver": (app_csidriver.#CSIDriver & {#cluster: config, #ref: versions["secrets-store-csi-driver"]}).component
 		openbao:                    (app_openbao.#OpenBao & {#cluster: config, #ref: versions.openbao}).component
 		"openbao-csi-provider":     (app_openbaocsi.#OpenBaoCSI & {#cluster: config, #ref: versions.openbao}).component
