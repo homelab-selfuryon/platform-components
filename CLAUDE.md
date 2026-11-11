@@ -13,7 +13,8 @@ schema/        #Cluster, #Component, #Chart, #Allow (whitelist), typed manifests
 registry/      latest.json (Renovate) + #Resolve
 render/        #Rendered: component -> Kustomization + plain objects + meta; #Complete adds network policies
 components/<category>/<name>/   one package per component: #X: {#cluster, #ref, component: schema.#Component & {...}}
-policies/      Kyverno CEL policies; whitelists/ServiceAccounts/Kustomization names come from the components
+policies/      Kyverno CEL policies, one file per policy (`_policy: "<name>"`, values from `#ctx`: context.cue);
+               whitelists/ServiceAccounts/Kustomization names come from the components
 teams/         teams/<name>.cue (data) + schema.cue + component.cue (render of `team-<name>`)
 bootstrap/     #Bootstrap (flux-privileged, gitops-root, OCIRepository gitops, root Kustomization)
 clusters/      defaults.cue (#Platform: all components), clusters.cue (registry), <c>/{cluster.cue,pins.json,talos/}
