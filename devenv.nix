@@ -1,10 +1,14 @@
 { pkgs, config, ... }:
+let
+  root = config.devenv.root;
+in
 {
   # Cluster access for bootstrap and break-glass (docs/bootstrap.md): paths only, the files live in
-  # the git-ignored .secrets/ and come from the break-glass bundle.
+  # the git-ignored .secrets/ and come from the break-glass bundle; they point at the node's fixed ULA
+  # address. kubectl, flux and talosctl use them as they are.
   env = {
-    TALOSCONFIG = "${config.devenv.root}/.secrets/talos/alpha-01/talosconfig";
-    KUBECONFIG = "${config.devenv.root}/.secrets/kubernetes/config";
+    TALOSCONFIG = "${root}/.secrets/talos/alpha-01/talosconfig";
+    KUBECONFIG = "${root}/.secrets/kubernetes/config";
   };
 
   # CUE, treefmt (nixfmt, prettier, cue fmt), the secret-scanning hooks and the workflow linters come
@@ -28,6 +32,16 @@
   treefmt.config.programs.shfmt.enable = true;
 
   scripts.vet.exec = "bash scripts/cue-vet.bash";
+
+  # Argo CD has no API server (core mode): the CLI talks to Kubernetes with the admin kubeconfig, in
+  # the namespace of clusters/alpha-01/kubeconfig-argocd.yaml (argocd-system).
+  scripts.argocd = {
+    description = "argocd CLI in core mode against alpha-01 (namespace argocd-system)";
+    exec = ''
+      KUBECONFIG="${root}/clusters/alpha-01/kubeconfig-argocd.yaml:${root}/.secrets/kubernetes/config" \
+        exec ${pkgs.argocd}/bin/argocd --core "$@"
+    '';
+  };
 
   enterTest = ''
     bash scripts/cue-vet.bash
