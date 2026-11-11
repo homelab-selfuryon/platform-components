@@ -69,7 +69,7 @@ devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies ov
 `#ref: #ref` refers to itself (use `let _ref = #ref`); a loop variable named `kind` is shadowed by a
 field `kind`; an import named like a field is shadowed (alias imports); `list.UniqueItems` returns a
 bool; `rbac` and `kyverno-policies` are built from the other components and must not contain each
-other (see `_base` in `clusters/defaults.cue`). The module is language v0.18.0, evaluated by the v0.18.0-rc.3 binary that `devenv.nix` installs (drop the override when nixpkgs has v0.18).
+other (see `_base` in `clusters/defaults.cue`). The module is language v0.18.0, evaluated by the v0.18.0-rc.4 binary that `devenv.nix` installs (drop the override when nixpkgs has v0.18).
 
 ## Policies
 

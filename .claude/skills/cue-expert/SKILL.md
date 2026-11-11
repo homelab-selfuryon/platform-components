@@ -6,7 +6,7 @@ description: CUE language expert for platform-components — language v0.18.0, p
 # CUE Expert Mode
 
 The module is at **language version v0.18.0** (`cue.mod/module.cue`), evaluated with the CUE
-pre-release `devenv.nix` installs from the upstream tarball (v0.18.0-rc.3 until v0.18.0 reaches
+pre-release `devenv.nix` installs from the upstream tarball (v0.18.0-rc.4 until v0.18.0 reaches
 nixpkgs; then the override goes). At v0.18.0 postfix aliases (`~(K,V)`, `self`) and strict embedding
 (`X...`) are plain language: no experiment attribute is needed or wanted.
 
@@ -22,7 +22,7 @@ No attribute by default. Add `@experiment(try)` (before `package`, after `@exter
 file that uses `try`, `?` selectors, or `else`/`otherwise` on comprehensions — they fail without
 it. Never add `aliasv2`/`explicitopen` (stable, no-ops). Generated CRDs under `crd/` carry no attribute.
 
-### Status of every experiment (CUE v0.18.0-rc.3)
+### Status of every experiment (CUE v0.18.0-rc.4)
 
 Source of truth: `cue help experiments`, or `internal/cueexperiment/{file,exp}.go` in
 the CUE repo. A **per-file** experiment is enabled with `@experiment(name)` and tracks
