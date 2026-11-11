@@ -30,4 +30,13 @@ _policy: "tenant-postgres-clusters": {
 			}]
 		}
 	}
+	// The reports controller scans existing Clusters in the background.
+	global: clusterRole: "kyverno:report-postgres-clusters": {
+		metadata: labels: "rbac.kyverno.io/aggregate-to-reports-controller": "true"
+		rules: [{
+			apiGroups: ["postgresql.cnpg.io"]
+			resources: ["clusters"]
+			verbs:     ["get", "list", "watch"]
+		}]
+	}
 }
