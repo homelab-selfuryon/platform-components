@@ -21,6 +21,10 @@ import (
 // (contract: meta/delivery.md, gitops schema/render.cue).
 #ArgoCDNamespace: "argocd-system"
 
+// The ClusterImageCatalog of PostgreSQL images (components/storage/cnpg). Tenant Clusters must use it
+// (policy tenant-postgres-clusters); platform-kit renders the reference (meta/delivery.md).
+#PostgresImageCatalog: "postgresql"
+
 _defaultLabels: {
 	"app.kubernetes.io/part-of": "homelab-selfuryon"
 	"\(#Prefix)/managed-by":     *"platform" | string
@@ -66,6 +70,9 @@ _defaultLabels: {
 
 	// Gateway API / Envoy Gateway (no schema here; see components/network)
 	gatewayClass: [string]: #Raw & {apiVersion: "gateway.networking.k8s.io/v1", kind: "GatewayClass"}
+
+	// CloudNativePG (no schema here; see components/storage/cnpg)
+	clusterImageCatalog: [string]: #Raw & {apiVersion: "postgresql.cnpg.io/v1", kind: "ClusterImageCatalog"}
 }
 
 // Namespaced kinds, keyed by namespace, type and name.

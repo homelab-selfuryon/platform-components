@@ -49,19 +49,20 @@ import "strings"
 	bind: [...string]
 }
 
-#ClusterRole:        #Allow & {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole", resource: "clusterroles"}
-#ClusterRoleBinding: #Allow & {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRoleBinding", resource: "clusterrolebindings"}
-#CRD:                #Allow & {apiGroup: "apiextensions.k8s.io", kind: "CustomResourceDefinition", resource: "customresourcedefinitions"}
-#ValidatingWebhook:  #Allow & {apiGroup: "admissionregistration.k8s.io", kind: "ValidatingWebhookConfiguration", resource: "validatingwebhookconfigurations"}
-#MutatingWebhook:    #Allow & {apiGroup: "admissionregistration.k8s.io", kind: "MutatingWebhookConfiguration", resource: "mutatingwebhookconfigurations"}
-#StorageClass:       #Allow & {apiGroup: "storage.k8s.io", kind: "StorageClass", resource: "storageclasses"}
-#PriorityClass:      #Allow & {apiGroup: "scheduling.k8s.io", kind: "PriorityClass", resource: "priorityclasses"}
-#APIService:         #Allow & {apiGroup: "apiregistration.k8s.io", kind: "APIService", resource: "apiservices"}
-#CSIDriver:          #Allow & {apiGroup: "storage.k8s.io", kind: "CSIDriver", resource: "csidrivers"}
-#Namespace:          #Allow & {apiGroup: "", kind: "Namespace", resource: "namespaces"}
-#GatewayClass:       #Allow & {apiGroup: "gateway.networking.k8s.io", kind: "GatewayClass", resource: "gatewayclasses"}
-#ClusterIssuer:      #Allow & {apiGroup: "cert-manager.io", kind: "ClusterIssuer", resource: "clusterissuers"}
-#CCNP:               #Allow & {apiGroup: "cilium.io", kind: "CiliumClusterwideNetworkPolicy", resource: "ciliumclusterwidenetworkpolicies"}
+#ClusterRole:         #Allow & {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole", resource: "clusterroles"}
+#ClusterRoleBinding:  #Allow & {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRoleBinding", resource: "clusterrolebindings"}
+#CRD:                 #Allow & {apiGroup: "apiextensions.k8s.io", kind: "CustomResourceDefinition", resource: "customresourcedefinitions"}
+#ValidatingWebhook:   #Allow & {apiGroup: "admissionregistration.k8s.io", kind: "ValidatingWebhookConfiguration", resource: "validatingwebhookconfigurations"}
+#MutatingWebhook:     #Allow & {apiGroup: "admissionregistration.k8s.io", kind: "MutatingWebhookConfiguration", resource: "mutatingwebhookconfigurations"}
+#StorageClass:        #Allow & {apiGroup: "storage.k8s.io", kind: "StorageClass", resource: "storageclasses"}
+#PriorityClass:       #Allow & {apiGroup: "scheduling.k8s.io", kind: "PriorityClass", resource: "priorityclasses"}
+#APIService:          #Allow & {apiGroup: "apiregistration.k8s.io", kind: "APIService", resource: "apiservices"}
+#CSIDriver:           #Allow & {apiGroup: "storage.k8s.io", kind: "CSIDriver", resource: "csidrivers"}
+#Namespace:           #Allow & {apiGroup: "", kind: "Namespace", resource: "namespaces"}
+#GatewayClass:        #Allow & {apiGroup: "gateway.networking.k8s.io", kind: "GatewayClass", resource: "gatewayclasses"}
+#ClusterIssuer:       #Allow & {apiGroup: "cert-manager.io", kind: "ClusterIssuer", resource: "clusterissuers"}
+#CCNP:                #Allow & {apiGroup: "cilium.io", kind: "CiliumClusterwideNetworkPolicy", resource: "ciliumclusterwidenetworkpolicies"}
+#ClusterImageCatalog: #Allow & {apiGroup: "postgresql.cnpg.io", kind: "ClusterImageCatalog", resource: "clusterimagecatalogs"}
 
 // Cilium network policy building blocks for a component's own policy.
 Net: {
@@ -175,6 +176,11 @@ Net: {
 		// Replaces the default Role of a namespace (least privilege where a wildcard is too much).
 		namespaced: [string]: [...{...}]
 	}
+
+	// Images, besides the teams' own (ghcr.io/homelab-selfuryon/...@sha256), that pods in tenant
+	// namespaces may run because this component starts them there (an operator's workload images).
+	// Exact references, pinned by digest; the policy tenant-images-by-digest allows these and no others.
+	tenantImages: [...=~"@sha256:[0-9a-f]{64}$"]
 
 	// Kubernetes API groups/versions (`group/version`) the chart may test with Capabilities.
 	apiVersions: [...string]
