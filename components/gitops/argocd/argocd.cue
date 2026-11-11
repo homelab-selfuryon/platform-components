@@ -54,8 +54,9 @@ import (
 					"application.sync.impersonation.enabled": "true"
 					// The controller caches every kind in the cluster unless told otherwise; its ClusterRole below
 					// reads only tenant kinds, so without this the cache fails on the first forbidden kind
-					// (Secrets, Flux) and no Application gets a live state. `normal`: skip kinds it may not list.
-					"resource.respectRBAC": "normal"
+					// (Secrets, Flux) and no Application gets a live state. `strict`: skip a kind only when a
+					// SelfSubjectAccessReview confirms the list is denied (a passing 401 does not drop a kind).
+					"resource.respectRBAC": "strict"
 				}
 				// No config management plugins.
 				cmp: create: false
