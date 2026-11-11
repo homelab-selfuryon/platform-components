@@ -84,6 +84,12 @@ drop), check `cilium-dbg monitor -t policy-verdict` in the agent pod, then set i
 `cluster.cue`. Keep the Talos API (50000) and kube-apiserver (6443) reachable when editing
 `host-firewall`.
 
+`network.podAccessCIDRs` lets the operator's network reach every pod directly (the `pod-access`
+CiliumClusterwideNetworkPolicy, an allow on top of the pods' own policies). The workstation needs a
+route to the pod CIDR via the node, e.g. `ip -6 route add fd00:10:244::/56 via <node ULA>`; with a
+Tailscale or NetBird exit node also a rule ahead of its table (`ip -6 rule add to fd00:10:244::/56
+lookup main priority 5200`).
+
 ## 3. The OpenBao seal key
 
 OpenBao unseals itself with a static key: the Secret `openbao-seal-key` (key `key`, 32 random bytes

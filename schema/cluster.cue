@@ -35,6 +35,9 @@ package schema
 		// Sources allowed to reach the node itself (Talos API, kube-apiserver, DHCP, ICMP)
 		// through the Cilium host firewall; everything else from outside the cluster is dropped.
 		trustedCIDRs!: [...string]
+		// Sources allowed to reach every pod directly (pod addresses routed to the node), on top
+		// of the pods' own policies: the operator's workstation network. Empty: none.
+		podAccessCIDRs: *[] | [...string]
 		// Cilium policyAuditMode: policies only log what they would drop.
 		policyAudit: *false | bool
 	}

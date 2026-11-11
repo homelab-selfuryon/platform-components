@@ -64,6 +64,18 @@ import (
 			]
 		}
 
-		whitelist: [schema.#CCNP & {names: ["host-firewall"]}]
+		// Direct access to the pods from the operator's network (pod addresses are routed to the
+		// node). Only adds an allow: `enableDefaultDeny` off, so pods without a policy of their own
+		// (kube-system) do not fall into default-deny because this one selects them.
+		if len(#cluster.network.podAccessCIDRs) > 0 {
+			manifests: global: ciliumClusterwideNetworkPolicy: "pod-access": spec: {
+				description:       "Ingress to every pod from the operator's network (podAccessCIDRs)."
+				endpointSelector:  {}
+				enableDefaultDeny: {ingress: false, egress: false}
+				ingress:           [{fromCIDRSet: [for c in #cluster.network.podAccessCIDRs {cidr: c}]}]
+			}
+		}
+
+		whitelist: [schema.#CCNP & {names: ["host-firewall", "pod-access"]}]
 	}
 }
