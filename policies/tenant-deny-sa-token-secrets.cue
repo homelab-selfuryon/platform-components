@@ -6,7 +6,9 @@ _policy: "tenant-deny-sa-token-secrets": {
 	global: validatingPolicy: {
 		"tenant-deny-sa-token-secrets": spec: {
 			validationActions: ["Deny"]
-			evaluation: background: enabled: true
+			// Admission only: a background scan would need the reports controller to read every
+			// Secret in the cluster.
+			evaluation: background: enabled: false
 			matchConstraints: {
 				namespaceSelector: _tenantNS
 				resourceRules: [{

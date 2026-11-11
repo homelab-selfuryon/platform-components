@@ -84,7 +84,7 @@ _policy: [string]: {
 // whole set stops. This component is the only source of policies and the render is reviewed
 // here; the ClusterRoles keep exact names.
 _selfWhitelist: [
-	schema.#ClusterRole & {names: ["kyverno:generate-tenant-defaults", "kyverno:cleanup-pods"]},
+	schema.#ClusterRole & {names: ["kyverno:generate-tenant-defaults", "kyverno:cleanup-pods", "kyverno:report-postgres-clusters"]},
 	for key, spec in {
 		validatingPolicy:      {kind: "ValidatingPolicy", resource: "validatingpolicies"}
 		imageValidatingPolicy: {kind: "ImageValidatingPolicy", resource: "imagevalidatingpolicies"}
