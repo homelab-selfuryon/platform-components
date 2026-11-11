@@ -12,8 +12,8 @@ import (
 //
 // Hardening: no API server or UI (core mode: no local admin, no exec, no tokens to leak), no
 // config management plugins, no Dex, no notifications; sync impersonation on; the application
-// controller reads a fixed set of kinds (no Secrets) and may impersonate only the deploy
-// ServiceAccounts; the `default` AppProject allows nothing.
+// controller reads a fixed set of kinds (no Secrets; `resource.respectRBAC` skips the rest) and
+// may impersonate only the deploy ServiceAccounts; the `default` AppProject allows nothing.
 #ArgoCD: {
 	#cluster: schema.#Cluster
 	#ref:     schema.#Ref
@@ -52,6 +52,11 @@ import (
 					"users.anonymous.enabled":                "false"
 					"exec.enabled":                           "false"
 					"application.sync.impersonation.enabled": "true"
+					// The controller caches every kind in the cluster unless told otherwise; its ClusterRole below
+					// reads only tenant kinds, so without this the cache fails on the first forbidden kind
+					// (Secrets, Flux) and no Application gets a live state. `strict`: skip a kind only when a
+					// SelfSubjectAccessReview confirms the list is denied (a passing 401 does not drop a kind).
+					"resource.respectRBAC": "strict"
 				}
 				// No config management plugins.
 				cmp: create: false
