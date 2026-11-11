@@ -125,6 +125,7 @@ mount the secrets start, the Secrets are synced, the ClusterIssuers and Gateways
 flux get kustomizations -A                       # everything Ready
 kubectl get clusterissuer,gateway -A
 kubectl -n argocd-system get appproject                 # notes, notes-preview (and the locked default)
+argocd app list                                  # devenv wrapper: core mode, namespace argocd-system
 kubectl get ns -l homelab-selfuryon.github.io/team
 ```
 
