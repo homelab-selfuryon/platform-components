@@ -78,5 +78,7 @@ DeletingPolicy), Enforce; `kyverno.io/v1 ClusterPolicy` is deprecated, add none.
 `scripts/kyverno-check.sh` (it type-checks them): policies that read `request.userInfo` run once per
 component with `--userinfo` as its Flux ServiceAccount; every run must end with no failures and no
 errors. The CLI does not apply policies to Kyverno's own policy kinds, so `component-whitelist` on
-`kyverno-policies` itself is only enforced in the cluster. Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
+`kyverno-policies` itself is only enforced in the cluster. ClusterRoles a policy needs (aggregated to a Kyverno
+controller) go under `clusterRole` of its `_policy` entry and ship in `kyverno-policies-rbac` (set
+`platform`): by then the new `component-whitelist` knows their names. Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
 admission selects on that label and on `.../env`, which only the platform sets.

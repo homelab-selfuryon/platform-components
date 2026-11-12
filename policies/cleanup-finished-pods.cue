@@ -21,7 +21,7 @@ _policy: "cleanup-finished-pods": {
 			expression: "!object.metadata.?ownerReferences.orValue([]).exists(o, o.kind == 'Job')"
 		}]
 	}
-	global: clusterRole: "kyverno:cleanup-pods": {
+	clusterRole: "kyverno:cleanup-pods": {
 		metadata: labels: "rbac.kyverno.io/aggregate-to-cleanup-controller": "true"
 		rules: [{
 			apiGroups: [""]
