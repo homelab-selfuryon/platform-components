@@ -3,6 +3,7 @@ package policies
 import (
 	"encoding/json"
 	"list"
+	"strings"
 
 	"github.com/homelab-selfuryon/platform-components/schema"
 	teams_pkg "github.com/homelab-selfuryon/platform-components/teams"
@@ -16,6 +17,8 @@ import (
 	registries: string
 	wf: [string]: string
 	issuer:         string
+	domain:         string
+	tenantNSRegex:  string
 	image:          string
 	tenantImages:   string
 	whitelistsJSON: string
@@ -40,7 +43,11 @@ import (
 	registries: json.Marshal(#cluster.security.allowedRegistries)
 	wf:         #cluster.artifacts.workflows
 	issuer:     #cluster.artifacts.issuer
-	image:      "\(#cluster.artifacts.registry)/"
+	domain:     #cluster.domain
+
+	// Namespaces of the teams: <team>-staging, <team>-prod, <team>-pr-<n>. Team names are [a-z0-9].
+	tenantNSRegex: "^(" + strings.Join(list.SortStrings([for n, _ in #teams {n}]), "|") + ")-(staging|prod|pr-[0-9]+)$"
+	image:         "\(#cluster.artifacts.registry)/"
 
 	// Foreign images tenant pods may run: the workload images of platform operators (cnpg).
 	tenantImages: json.Marshal(list.SortStrings([for _, c in #components for i in c.tenantImages {i}]))
