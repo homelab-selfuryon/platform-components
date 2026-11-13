@@ -33,6 +33,7 @@ devenv shell -- cue cmd check  -t cluster=alpha-01
 devenv shell -- cue cmd bootstrap -t cluster=alpha-01
 devenv shell -- cue cmd promote -t to=alpha-01 [-t from=latest] [-t components=cilium,kyverno]
 devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies over the rendered objects
+devenv --profile ops shell -- kubectl ...                 # cluster tools (talosctl, flux, argocd, ...): profile `ops`
 ```
 
 ## Rules
@@ -55,6 +56,8 @@ devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies ov
   no rights there any more) and stays not Ready. Clear its inventory once, never delete the
   Kustomization (prune would remove the new install):
   `kubectl -n flux-system patch kustomization <name> --subresource=status --type=json -p '[{"op":"remove","path":"/status/inventory"}]'`.
+- devenv: the base shell is what CI needs (render, check, Kyverno) and what CI caches; cluster and
+  release tools live in the `ops` profile (`.envrc` enables it). A tool CI needs goes into the base.
 - Versions: `registry/latest.json` (Renovate) -> `cue cmd promote` -> `clusters/<c>/pins.json`.
   Field order in latest.json is a Renovate regex contract.
 - Rendering must stay deterministic: render twice and `diff -r out/<c>` (hidden dirs excluded)

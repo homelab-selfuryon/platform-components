@@ -21,16 +21,20 @@ import sys
 
 import yaml
 
+# libyaml when available: the pure-Python parser takes seconds on the CRDs.
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+_Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+
 POLICY_KINDS = {"ValidatingPolicy", "ImageValidatingPolicy", "GeneratingPolicy", "DeletingPolicy", "MutatingPolicy"}
 
 
 def load(path):
-    return [d for d in yaml.safe_load_all(path.read_text()) if d] if path.exists() else []
+    return [d for d in yaml.load_all(path.read_text(), Loader=_Loader) if d] if path.exists() else []
 
 
 def dump(path, docs):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join("---\n" + yaml.safe_dump(d, sort_keys=False, width=1 << 20) for d in docs))
+    path.write_text("".join("---\n" + yaml.dump(d, Dumper=_Dumper, sort_keys=False, width=1 << 20) for d in docs))
 
 
 def group(doc):

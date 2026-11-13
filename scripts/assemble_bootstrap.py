@@ -10,16 +10,20 @@ import sys
 
 import yaml
 
+# libyaml when available: the pure-Python parser takes seconds on the CRDs.
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+_Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+
 base = pathlib.Path(sys.argv[1])
 
 
 def load(p):
-    return [d for d in yaml.safe_load_all(p.read_text()) if d]
+    return [d for d in yaml.load_all(p.read_text(), Loader=_Loader) if d]
 
 
 objects = load(base / ".bootstrap" / "objects.yaml")
 namespaces = [d for d in objects if d["kind"] == "Namespace"]
 rest = [d for d in objects if d["kind"] != "Namespace"]
 docs = namespaces + load(base / ".bootstrap/cilium/manifests.yaml") + load(base / ".bootstrap/flux-operator/manifests.yaml") + rest
-(base / "bootstrap.yaml").write_text("".join("---\n" + yaml.safe_dump(d, sort_keys=True, width=1 << 20) for d in docs))
+(base / "bootstrap.yaml").write_text("".join("---\n" + yaml.dump(d, Dumper=_Dumper, sort_keys=True, width=1 << 20) for d in docs))
 print(f"{base}/bootstrap.yaml: {len(docs)} objects")

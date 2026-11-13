@@ -20,6 +20,10 @@ import tempfile
 
 import yaml
 
+# libyaml when available: the pure-Python parser takes seconds on the CRDs.
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+_Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from kube_scope import crd_scopes, is_cluster_scoped  # noqa: E402
 
@@ -70,7 +74,7 @@ def helm_template(meta, workdir):
     out = run(cmd, env=helm_env())
     if tmp:
         tmp.cleanup()
-    return [d for d in yaml.safe_load_all(out) if d]
+    return [d for d in yaml.load_all(out, Loader=_Loader) if d]
 
 
 HOOK_ANNOTATIONS = ("helm.sh/hook", "helm.sh/hook-weight", "helm.sh/hook-delete-policy")
@@ -111,19 +115,19 @@ def apply_hook_policy(docs, name):
 def load(path):
     if not path.exists():
         return []
-    return [d for d in yaml.safe_load_all(path.read_text()) if d]
+    return [d for d in yaml.load_all(path.read_text(), Loader=_Loader) if d]
 
 
 def patch(docs, patches, workdir):
     """Apply kustomize patches to docs."""
     with tempfile.TemporaryDirectory() as t:
         t = pathlib.Path(t)
-        (t / "resources.yaml").write_text(yaml.safe_dump_all(docs, sort_keys=True))
+        (t / "resources.yaml").write_text(yaml.dump_all(docs, Dumper=_Dumper, sort_keys=True))
         (t / "kustomization.yaml").write_text(
-            yaml.safe_dump({"resources": ["resources.yaml"], "patches": patches}, sort_keys=True)
+            yaml.dump({"resources": ["resources.yaml"], "patches": patches}, Dumper=_Dumper, sort_keys=True)
         )
         out = run(["kustomize", "build", str(t)])
-    return [d for d in yaml.safe_load_all(out) if d]
+    return [d for d in yaml.load_all(out, Loader=_Loader) if d]
 
 
 def write(path, docs):
@@ -134,7 +138,7 @@ def write(path, docs):
         return (m.get("namespace", ""), d.get("kind", ""), m.get("name", ""))
 
     docs = sorted(docs, key=key)
-    path.write_text("".join("---\n" + yaml.safe_dump(d, sort_keys=True, width=1 << 20) for d in docs))
+    path.write_text("".join("---\n" + yaml.dump(d, Dumper=_Dumper, sort_keys=True, width=1 << 20) for d in docs))
 
 
 def main():
