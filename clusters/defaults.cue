@@ -93,9 +93,10 @@ import (
 		openbao:                    (app_openbao.#OpenBao & {#cluster: config, #ref: versions.openbao}).component
 		"openbao-csi-provider":     (app_openbaocsi.#OpenBaoCSI & {#cluster: config, #ref: versions.openbao}).component
 		argocd: (app_argocd.#ArgoCD & {
-			#cluster:     config
-			#ref:         versions.argocd
-			#impersonate: list.Concat([["deployer"], [for _, t in teams.Teams {t.previewDeployer}]])
+			#cluster:       config
+			#ref:           versions.argocd
+			#impersonate:   list.Concat([["deployer"], [for _, t in teams.Teams {t.previewDeployer}]])
+			#appNamespaces: [for _, t in teams.Teams {t.namespaces.argocd}]
 		}).component
 
 		"cluster-issuers": (app_clusterissuers.#ClusterIssuers & {#cluster: config}).component

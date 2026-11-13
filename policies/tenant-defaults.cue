@@ -66,6 +66,20 @@ _policy: "tenant-defaults": {
 				}
 			}).spec
 		}
+
+		// The team reads its previews like its other namespaces (`view`, which excludes Secrets).
+		for _, t in #ctx.teams {
+			"preview-view-\(t.name)": spec: (#Generate & {
+				#condition: "has(object.metadata.labels) && object.metadata.labels[?'\(_team)'].orValue('') == '\(t.name)' && object.metadata.labels[?'\(_env)'].orValue('') == 'preview'"
+				#object: {
+					apiVersion: "rbac.authorization.k8s.io/v1"
+					kind:       "RoleBinding"
+					metadata: name: "team-view"
+					roleRef:  {apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole", name: "view"}
+					subjects: [{kind: "Group", apiGroup: "rbac.authorization.k8s.io", name: t.group}]
+				}
+			}).spec
+		}
 	}
 	// The Kyverno controllers create what the generating policies describe.
 	clusterRole: "kyverno:generate-tenant-defaults": {
@@ -81,6 +95,15 @@ _policy: "tenant-defaults": {
 			apiGroups: [""]
 			resources: ["limitranges", "resourcequotas"]
 			verbs:     ["create", "update", "patch", "delete", "get", "list", "watch"]
+		}, {
+			apiGroups: ["rbac.authorization.k8s.io"]
+			resources: ["rolebindings"]
+			verbs:     ["create", "update", "patch", "delete", "get", "list", "watch"]
+		}, {
+			apiGroups:     ["rbac.authorization.k8s.io"]
+			resources:     ["clusterroles"]
+			verbs:         ["bind"]
+			resourceNames: ["view"]
 		}]
 	}
 }

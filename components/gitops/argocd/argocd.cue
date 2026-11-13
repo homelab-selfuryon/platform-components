@@ -1,6 +1,8 @@
 package argocd
 
 import (
+	"strings"
+
 	"github.com/homelab-selfuryon/platform-components/schema"
 )
 
@@ -21,6 +23,13 @@ import (
 
 	// Names of the ServiceAccounts Argo may impersonate (one per team and environment kind).
 	#impersonate: [...string]
+
+	// Namespaces of the teams' Applications (`argocd-<team>`, apps in any namespace): a team reads
+	// its own there. Their AppProjects stay here and name them in `sourceNamespaces`; the
+	// controller's write access there comes with each team (teams/component.cue). ApplicationSets
+	// stay in this namespace only: in more than one, the ApplicationSet controller watches Secrets
+	// cluster-wide.
+	#appNamespaces: [...string]
 
 	component: schema.#Component & {
 		name:        "argocd"
@@ -58,6 +67,7 @@ import (
 					// SelfSubjectAccessReview confirms the list is denied (a passing 401 does not drop a kind).
 					"resource.respectRBAC": "strict"
 				}
+				params: "application.namespaces": strings.Join(#appNamespaces, ",")
 				// No config management plugins.
 				cmp: create: false
 			}
@@ -83,7 +93,8 @@ import (
 					}]
 				}
 			}
-			// ApplicationSet controller: the preview ApplicationSets (pull request generator).
+			// ApplicationSet controller: the preview ApplicationSets (pull request generator), in
+			// argocd-system only (no `allowAnyNamespace`).
 			applicationSet: replicas: 1
 			repoServer: replicas:     1
 		}
