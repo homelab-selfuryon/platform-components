@@ -1,0 +1,11 @@
+# octo-sts trust policy `promote`: the token the Promote workflow uses to open the
+# `promote/<cluster>` PR on this repository. The org does not let GITHUB_TOKEN create pull
+# requests (platform-terraform github/actions.tf), and CI would not run on one it opened.
+issuer: https://token.actions.githubusercontent.com
+subject_pattern: repo:homelab-selfuryon@353728095/platform-components@[0-9]+:ref:refs/heads/main
+claim_pattern:
+  event_name: workflow_dispatch
+  job_workflow_ref: homelab-selfuryon/platform-components/\.github/workflows/promote\.yaml@refs/heads/main
+permissions:
+  contents: write
+  pull_requests: write
