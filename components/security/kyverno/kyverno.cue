@@ -25,6 +25,21 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 			url:  "oci://ghcr.io/kyverno/charts"
 			name: "kyverno"
 		}
+		// The post-upgrade job that migrates stored policies to new CRD versions has no delete policy in
+		// the chart and would stay until the next upgrade: removed a day after it finishes (its log
+		// stays readable until then).
+		postRender: [{
+			target: {group: "batch", kind: "Job", name: "kyverno-migrate-resources"}
+			patch: """
+				apiVersion: batch/v1
+				kind: Job
+				metadata:
+				  name: kyverno-migrate-resources
+				spec:
+				  ttlSecondsAfterFinished: 86400
+				"""
+		}]
+
 		values: {
 			crds: install: true
 			// Checking images calls registries and the Sigstore infrastructure; nothing else.
