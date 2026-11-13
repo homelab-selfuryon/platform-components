@@ -25,7 +25,8 @@ import (
 //                                    kube-apiserver; no entities, CIDRs or reserved labels
 //     tenant-http-routes             HTTPRoutes: the team's own host names, its environment's Gateway
 //     tenant-defaults                tenant-default-deny / tenant-default-limits, generated per
-//                                    tenant namespace; preview-quota-<team> per preview namespace
+//                                    tenant namespace; preview-quota-<team> and preview-view-<team>
+//                                    (team-view RoleBinding) per preview namespace
 //     preview-deployer-scope         the preview deploy ServiceAccount acts in <team>-pr-<n> only;
 //                                    its Namespaces carry no platform labels besides team and env
 //     cleanup-preview-namespaces     deletes <team>-pr-<n> namespaces no Argo Application points at
