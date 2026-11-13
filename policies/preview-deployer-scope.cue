@@ -35,6 +35,17 @@ _policy: "preview-deployer-scope": {
 				validations: [{
 					expression: "variables.ns.matches(variables.allowed[request.userInfo.username])"
 					message:    "The preview deploy ServiceAccount may only act in its team's preview namespaces (<team>-pr-<n>)."
+				}, {
+					// Argo creates the namespace as this ServiceAccount (managedNamespaceMetadata), and
+					// so could an artifact. Policies and OpenBao trust the platform's labels on it
+					// (expose, team, env): only team and env, and Pod Security restricted, are allowed.
+					expression: """
+						variables.target.kind != 'Namespace' || request.operation == 'DELETE'
+						|| object.metadata.?labels.orValue({}).all(k,
+						     (!k.startsWith('\(schema.#Prefix)/') || k in ['\(_team)', '\(_env)'])
+						     && (!k.startsWith('pod-security.kubernetes.io/') || object.metadata.labels[k] in ['restricted', 'latest']))
+						"""
+					message: "Preview namespaces carry only the platform labels team and env, and Pod Security restricted."
 				}]
 			}
 		}

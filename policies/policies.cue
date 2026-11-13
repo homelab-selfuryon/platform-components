@@ -21,9 +21,13 @@ import (
 //                                    from ServiceAccounts of tenant namespaces
 //     tenant-namespace-labels        Pod Security restricted, name matches team and environment
 //     tenant-postgres-clusters       CNPG Clusters: images from the platform catalog, no superuser
+//     tenant-network-policies        CiliumNetworkPolicies: pods of the teams and kube-dns, FQDNs,
+//                                    kube-apiserver; no entities, CIDRs or reserved labels
+//     tenant-http-routes             HTTPRoutes: the team's own host names, its environment's Gateway
 //     tenant-defaults                tenant-default-deny / tenant-default-limits, generated per
 //                                    tenant namespace; preview-quota-<team> per preview namespace
-//     preview-deployer-scope         the preview deploy ServiceAccount acts in <team>-pr-<n> only
+//     preview-deployer-scope         the preview deploy ServiceAccount acts in <team>-pr-<n> only;
+//                                    its Namespaces carry no platform labels besides team and env
 //   Platform
 //     component-whitelist            names of the cluster-scoped objects a component ServiceAccount creates
 //     component-namespaces           namespaces a component ServiceAccount (teams) writes to
