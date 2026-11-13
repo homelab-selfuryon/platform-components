@@ -109,12 +109,18 @@ jobs:
         env:
           CLUSTER: ${{ matrix.cluster }}
 
-      # Main's render, the base side of later pull requests' diffs (hidden dirs .work/.bootstrap are left out).
+      # Main's render, the base side of later pull requests' diffs. Hidden files are left out by
+      # default, but .approx (approximate render of the HelmRelease components) is in the diff;
+      # .work and .bootstrap are not.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.event_name == 'push'
         with:
           name: render-${{ matrix.cluster }}
-          path: head/out/${{ matrix.cluster }}
+          path: |
+            head/out/${{ matrix.cluster }}
+            !head/out/${{ matrix.cluster }}/.work
+            !head/out/${{ matrix.cluster }}/.bootstrap
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: error
 
