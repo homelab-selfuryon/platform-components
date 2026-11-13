@@ -28,6 +28,8 @@ import (
 //                                    tenant namespace; preview-quota-<team> per preview namespace
 //     preview-deployer-scope         the preview deploy ServiceAccount acts in <team>-pr-<n> only;
 //                                    its Namespaces carry no platform labels besides team and env
+//     cleanup-preview-namespaces     deletes <team>-pr-<n> namespaces no Argo Application points at
+//                                    (Argo creates them and never deletes them)
 //   Platform
 //     component-whitelist            names of the cluster-scoped objects a component ServiceAccount creates
 //     component-namespaces           namespaces a component ServiceAccount (teams) writes to

@@ -29,6 +29,8 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 // `preview-deployer-scope`), labels such namespaces `env=preview` and generates their default-deny,
 // LimitRange and quota. A team can not widen it: AppProject `<team>-preview` only allows
 // destinations `<team>-pr-*`, the ServiceAccount and the policy are platform-owned.
+// Argo never deletes the namespaces it creates: `cleanup-preview-namespaces` removes them once no
+// Application points at them.
 #Tenants: {
 	#team: #Team
 
