@@ -65,19 +65,30 @@ check() {
   echo "kyverno [$name]: $summary"
 }
 
-status=0
-
+# The runs are independent: all of them at once, KYVERNO_JOBS at a time (default: the CPUs), each
+# into its own file; the summaries are read afterwards in a fixed order.
 args=()
 for f in "$tmp"/static/resources/*.yaml; do args+=(--resource "$f"); done
-kyverno apply "$tmp/static/policies.yaml" "${args[@]}" --crd-paths "$tmp/static/crds.yaml" \
-  >"$tmp/static.out" 2>&1 || true
-check static "$tmp/static.out" || status=1
+# shellcheck disable=SC2329 # called through xargs (export -f)
+admission() {
+  kyverno apply "$tmp/admission/policies.yaml" --resource "$1/resources.yaml" \
+    --crd-paths "$1/crds.yaml" --userinfo "$1/userinfo.yaml" >"$1/out" 2>&1 || true
+}
+export -f admission
+export tmp
 
+kyverno apply "$tmp/static/policies.yaml" "${args[@]}" --crd-paths "$tmp/static/crds.yaml" \
+  >"$tmp/static.out" 2>&1 &
+static_pid=$!
+# shellcheck disable=SC2016 # $1 is expanded by the inner shell
+find "$tmp/admission" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z |
+  xargs -0 -r -P "${KYVERNO_JOBS:-$(nproc)}" -I{} bash -c 'admission "$1"' _ {}
+wait "$static_pid" || true
+
+status=0
+check static "$tmp/static.out" || status=1
 for dir in "$tmp"/admission/*/; do
-  n=$(basename "$dir")
-  kyverno apply "$tmp/admission/policies.yaml" --resource "$dir/resources.yaml" \
-    --crd-paths "$dir/crds.yaml" --userinfo "$dir/userinfo.yaml" >"$dir/out" 2>&1 || true
-  check "component-$n" "$dir/out" || status=1
+  check "component-$(basename "$dir")" "$dir/out" || status=1
 done
 
 exit "$status"

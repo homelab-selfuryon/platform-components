@@ -21,6 +21,9 @@ import sys
 
 import yaml
 
+# libyaml when available: the pure-Python parser takes seconds on the CRDs.
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from kube_scope import crd_scopes, is_cluster_scoped  # noqa: E402
 
@@ -28,7 +31,7 @@ from kube_scope import crd_scopes, is_cluster_scoped  # noqa: E402
 def load(path):
     if not path.exists():
         return []
-    return [d for d in yaml.safe_load_all(path.read_text()) if d]
+    return [d for d in yaml.load_all(path.read_text(), Loader=_Loader) if d]
 
 
 def group(doc):

@@ -57,7 +57,8 @@ docs/                          bootstrap + break-glass, secrets, gateways, teams
 ## Commands
 
 ```bash
-devenv shell                                   # cue, helm, kustomize, kyverno, cosign, oras, kubeconform, talosctl, yq, jq
+devenv shell                                   # render and check: cue, helm, kustomize, kyverno, kubeconform, yq
+devenv --profile ops shell                     # + talosctl, kubectl, flux, argocd, cosign, oras, gh, age (direnv enables it)
 cue cmd clusters                              # JSON: clusters, publish flag, sets
 cue cmd render  -t cluster=alpha-01           # out/<c>/<set>/{flux,components/<name>}/  (needs network: helm pulls charts)
 cue cmd check   -t cluster=alpha-01           # every cluster-scoped object of the render must match its component's whitelist

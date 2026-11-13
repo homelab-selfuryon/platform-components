@@ -17,7 +17,8 @@ Nothing here runs from CI. Never apply anything to a live cluster without decidi
 - The artifacts exist: `gitops` has published `ghcr.io/homelab-selfuryon/gitops/<cluster>:main`, and
   `platform-components` has released the sets it points to (a merged release PR in `gitops`).
   The packages are public (Flux and Argo CD pull anonymously).
-- `devenv shell` (cue, helm, talosctl, kubectl, flux, age, ...). No toolchain is installed globally.
+- `devenv --profile ops shell` (cue, helm, talosctl, kubectl, flux, age, ...; direnv enables the
+  profile). No toolchain is installed globally.
 - For disk encryption (`ENCRYPT=1 ./gen.sh`, `talos/patches/encryption.yaml`): Secure Boot enabled in
   the firmware and TPM 2.0 present, the keys are sealed to it, and a fresh install (Talos encrypts
   a volume only when it creates it). alpha-01 runs without it for now (meta `decisions.md`).
@@ -38,7 +39,7 @@ talosctl --talosconfig .secrets/talos/alpha-01/talosconfig bootstrap      # once
 talosctl --talosconfig .secrets/talos/alpha-01/talosconfig kubeconfig .secrets/kubernetes/config
 ```
 
-Move `.secrets/` into the break-glass bundle now. `devenv shell` points `TALOSCONFIG` and
+Move `.secrets/` into the break-glass bundle now. The `ops` profile points `TALOSCONFIG` and
 `KUBECONFIG` at `.secrets/` (paths only). With encryption, the TPM-sealed volumes mean the node's
 disks are useless if it is stolen; they also mean a motherboard or firmware change needs the
 break-glass recovery path below.
