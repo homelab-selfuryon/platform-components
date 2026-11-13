@@ -36,8 +36,8 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
-      contents: write # the branch
-      pull-requests: write # the PR
+      contents: read
+      id-token: write # octo-sts (policy: .github/chainguard/promote.sts.yaml)
     steps:
       - name: Validate inputs
         run: |
@@ -63,8 +63,16 @@ jobs:
           FROM: ${{ inputs.from }}
           COMPONENTS: ${{ inputs.components }}
 
+      - name: Token for this repository
+        id: octo-sts
+        uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+        with:
+          scope: ${{ github.repository }}
+          identity: promote
+
       - uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
         with:
+          token: ${{ steps.octo-sts.outputs.token }}
           branch: promote/${{ inputs.to }}
           sign-commits: true
           delete-branch: true
