@@ -57,7 +57,10 @@ jobs:
         run: nix profile install --profile "$RUNNER_TEMP/devenv" "github:NixOS/nixpkgs/${NIXPKGS_REV}#devenv" && echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
 
       - name: Promote versions
-        run: devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS"
+        run: |
+          cp "clusters/${TO}/pins.json" "$RUNNER_TEMP/pins.old.json"
+          devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS"
+          devenv shell -- scripts/promote-summary.sh "$RUNNER_TEMP/pins.old.json" "clusters/${TO}/pins.json" registry/latest.json "$TO" "$FROM" > "$RUNNER_TEMP/body.md"
         env:
           TO: ${{ inputs.to }}
           FROM: ${{ inputs.from }}
@@ -79,4 +82,4 @@ jobs:
           add-paths: clusters/${{ inputs.to }}/pins.json
           title: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
           commit-message: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
-          body: "Updates `clusters/${{ inputs.to }}/pins.json` with `cue cmd promote` (source: `${{ inputs.from }}`)."
+          body-path: ${{ runner.temp }}/body.md
