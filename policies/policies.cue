@@ -111,9 +111,6 @@ _policy: [string]: {
 // whole set stops. This component is the only source of policies and the render is reviewed
 // here.
 _selfWhitelist: [
-	// Transition: the ClusterRoles moved to kyverno-policies-rbac; kyverno-policies keeps the
-	// rights to prune its old copies until every cluster has rolled out the move. Remove then.
-	schema.#ClusterRole & {names: ["kyverno:generate-tenant-defaults", "kyverno:cleanup-pods", "kyverno:report-postgres-clusters"]},
 	for key, spec in {
 		validatingPolicy:      {kind: "ValidatingPolicy", resource: "validatingpolicies"}
 		imageValidatingPolicy: {kind: "ImageValidatingPolicy", resource: "imagevalidatingpolicies"}

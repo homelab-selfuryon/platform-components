@@ -62,3 +62,13 @@ _policy: "tenant-network-policies": {
 		}
 	}
 }
+
+// The reports controller scans existing policies in the background.
+_policy: "tenant-network-policies": clusterRole: "kyverno:report-cilium-network-policies": {
+	metadata: labels: "rbac.kyverno.io/aggregate-to-reports-controller": "true"
+	rules: [{
+		apiGroups: ["cilium.io"]
+		resources: ["ciliumnetworkpolicies"]
+		verbs:     ["get", "list", "watch"]
+	}]
+}

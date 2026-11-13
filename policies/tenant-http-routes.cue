@@ -56,3 +56,13 @@ _policy: "tenant-http-routes": {
 }
 
 _gatewayNamespace: "envoy-gateway-system"
+
+// The reports controller scans existing routes in the background.
+_policy: "tenant-http-routes": clusterRole: "kyverno:report-http-routes": {
+	metadata: labels: "rbac.kyverno.io/aggregate-to-reports-controller": "true"
+	rules: [{
+		apiGroups: ["gateway.networking.k8s.io"]
+		resources: ["httproutes"]
+		verbs:     ["get", "list", "watch"]
+	}]
+}
