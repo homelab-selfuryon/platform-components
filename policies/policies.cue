@@ -31,16 +31,19 @@ import (
 //     helmrelease-service-accounts   HelmReleases: listed components only, own ServiceAccount and namespace
 //     secretobjects-only-in-system   SecretProviderClass `secretObjects` in `*-system` namespaces only
 //
-// A policy file adds one entry to _policy: cluster-scoped objects under `global` (the keys of
-// schema.#GlobalTypes: validatingPolicy, generatingPolicy, clusterRole, ...), built from #ctx:
+// A policy file adds one entry to _policy: its policy kinds under `global` (validatingPolicy,
+// generatingPolicy, ...), built from #ctx, and the ClusterRoles the Kyverno controllers need for it
+// under `clusterRole` (released by kyverno-policies-rbac, see #PolicyRBAC):
 //
 //   _policy: "<name>": {
 //   	#ctx: #Context
 //   	global: validatingPolicy: "<name>": spec: {...}
+//   	clusterRole: "kyverno:<what>": {...}
 //   }
 _policy: [string]: {
 	#ctx:   #Context
 	global: {...}
+	clusterRole: [string]: {...}
 }
 
 #Policies: {
@@ -79,11 +82,33 @@ _policy: [string]: {
 	}
 }
 
+// The ClusterRoles of the policies, in their own component one set later. A ClusterRole needs an
+// exact name in a whitelist (escalate and bind are granted by resourceName); in kyverno-policies a
+// new name was refused by the component-whitelist still running in the cluster, which did not know
+// it yet. Here the new whitelist is already applied (set `policy`) when the ClusterRole arrives
+// (set `platform`).
+#PolicyRBAC: {
+	let _roles = {for _, p in _policy {p.clusterRole}}
+
+	component: schema.#Component & {
+		name:        "kyverno-policies-rbac"
+		description: "ClusterRoles the Kyverno controllers need for the policies (aggregated)."
+		set:         "platform"
+		dependsOn:   ["kyverno-policies"]
+
+		manifests: global: clusterRole: _roles
+
+		whitelist: [schema.#ClusterRole & {names: [for n, _ in _roles {n}]}]
+	}
+}
+
 // Its own policy kinds: any name. With exact names a new policy is refused by the
 // component-whitelist still running in the cluster (it does not know the name yet) and the
 // whole set stops. This component is the only source of policies and the render is reviewed
-// here; the ClusterRoles keep exact names.
+// here.
 _selfWhitelist: [
+	// Transition: the ClusterRoles moved to kyverno-policies-rbac; kyverno-policies keeps the
+	// rights to prune its old copies until every cluster has rolled out the move. Remove then.
 	schema.#ClusterRole & {names: ["kyverno:generate-tenant-defaults", "kyverno:cleanup-pods", "kyverno:report-postgres-clusters"]},
 	for key, spec in {
 		validatingPolicy:      {kind: "ValidatingPolicy", resource: "validatingpolicies"}

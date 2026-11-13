@@ -68,7 +68,7 @@ _policy: "tenant-defaults": {
 		}
 	}
 	// The Kyverno controllers create what the generating policies describe.
-	global: clusterRole: "kyverno:generate-tenant-defaults": {
+	clusterRole: "kyverno:generate-tenant-defaults": {
 		metadata: labels: {
 			"rbac.kyverno.io/aggregate-to-background-controller": "true"
 			"rbac.kyverno.io/aggregate-to-admission-controller":  "true"

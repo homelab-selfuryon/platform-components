@@ -108,8 +108,9 @@ import (
 
 		// Derived from the others: the policies bind ServiceAccounts to the components, the rbac set
 		// creates them.
-		"kyverno-policies": (policies.#Policies & {#cluster: config, #components: _base, #teams: teams.Teams}).component
-		rbac:               (app_rbac.#RBAC & {#cluster: config, #components: _noRBAC}).component
+		"kyverno-policies":      (policies.#Policies & {#cluster: config, #components: _base, #teams: teams.Teams}).component
+		"kyverno-policies-rbac": policies.#PolicyRBAC.component
+		rbac:                    (app_rbac.#RBAC & {#cluster: config, #components: _noRBAC}).component
 	}
 
 	// The policies and rbac are built from everything else, rbac also from the policies. They are
