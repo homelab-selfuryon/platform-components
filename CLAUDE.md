@@ -51,6 +51,10 @@ devenv --profile ops shell -- kubectl ...                 # cluster tools (talos
 - A new cluster-scoped kind or name in a render fails `cue cmd check` until the whitelist lists it:
   `python3 scripts/cluster_scoped.py out/<cluster> <component>` shows what a render contains. Do not
   widen a whitelist to make a check pass without understanding the object.
+- A RoleBinding to a Role of the same component needs `bind` on that Role's name in the
+  component's `rbac` (`resourceNames`): Flux dry-runs all objects before creating any, and without
+  `bind` the API server looks the Role up for its escalation check and fails with "not found".
+  The offline checks cannot see this.
 - Renaming a component's namespace: the `rbac` set deletes the old namespace with everything in it,
   and the component's Kustomization then cannot prune its old objects (403: its ServiceAccount has
   no rights there any more) and stays not Ready. Clear its inventory once, never delete the

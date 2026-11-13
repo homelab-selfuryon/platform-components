@@ -92,6 +92,13 @@ let _verbs = ["get", "list", "watch", "create", "update", "patch", "delete"]
 				apiGroups: [""]
 				resources: ["events"]
 				verbs:     ["get", "list", "watch", "create", "patch"]
+			}, {
+				// Flux dry-runs every object before applying any: without `bind` the API server looks
+				// up the Role a RoleBinding names to check for escalation, and it does not exist yet.
+				apiGroups:     ["rbac.authorization.k8s.io"]
+				resources:     ["roles"]
+				verbs:         ["bind"]
+				resourceNames: ["argo-apps", "argocd-application-controller", "team-view"]
 			}]
 		}
 
