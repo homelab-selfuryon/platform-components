@@ -87,5 +87,8 @@ component with `--userinfo` as its Flux ServiceAccount; every run must end with 
 errors. The CLI does not apply policies to Kyverno's own policy kinds, so `component-whitelist` on
 `kyverno-policies` itself is only enforced in the cluster. ClusterRoles a policy needs (aggregated to a Kyverno
 controller) go under `clusterRole` of its `_policy` entry and ship in `kyverno-policies-rbac` (set
-`platform`): by then the new `component-whitelist` knows their names. Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
+`platform`): by then the new `component-whitelist` knows their names. The cost: a new
+GeneratingPolicy with `generateExisting` runs once when it arrives, before its ClusterRole, gets 403
+and does not retry; only new triggers generate. Existing objects need a later change to the policy
+(or, with the user's go-ahead, a restart of the background controller). Tenant namespaces are the ones with the label `homelab-selfuryon.github.io/team`;
 admission selects on that label and on `.../env`, which only the platform sets.
