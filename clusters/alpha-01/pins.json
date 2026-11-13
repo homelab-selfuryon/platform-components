@@ -2,7 +2,7 @@
   "cilium": "1.20.4",
   "flux-operator": "0.62.1@sha256:1135514a01cc11e206f5ff0b568ac30d9defd675022b7a9da88d4a3474fbdf13",
   "flux": "v2.10.0",
-  "kyverno": "3.9.2@sha256:83054f30148c3cfc001087c1f5772eda7c7224e9b74b7f0e70c39c9cafe009d1",
+  "kyverno": "3.10.0@sha256:290ff54d4b7d015ce2ffe5be84b60e2db5a59d8c5dcea772a8f6e32475c2eba2",
   "gateway-api": "1.10.0@sha256:494cc4b63dcb1c828e64a3af2b10e5519f6c11035eba98f331854eb0c04b9d74",
   "cert-manager": "v1.21.3@sha256:e482675aec32862d323a9218293ff7de81192337998615e4378c56498473f240",
   "local-path-provisioner": "v0.0.37",
@@ -11,8 +11,8 @@
   "external-dns": "1.23.0",
   "cnpg": "0.29.1",
   "cnpg-operator": "1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07",
-  "postgresql": "18.6-system-trixie@sha256:48a0038fdd9672d12853d5300666b2592f97f9d34a993ea42e3ecb5a9a5e43e3",
+  "postgresql": "18.7-system-trixie@sha256:5a5dfbde88d5909fd4938189c141f53fb153f53c519f14907dce9e7c04baa153",
   "secrets-store-csi-driver": "1.6.2",
   "openbao": "0.30.7",
-  "argocd": "10.15.0@sha256:9c827f27e4d587b191b1e9becadc472bbaeb0ca0a18608425ba0ee4915d4ee48"
+  "argocd": "10.18.0@sha256:b9e529e96ae02d215dd4a3d354a40f7f393f4a3379337114de5926f99b7ac52e"
 }
