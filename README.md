@@ -11,20 +11,31 @@ CUE module `github.com/homelab-selfuryon/platform-components@v0`. Owner: the pla
 ## How it fits
 
 ```mermaid
-flowchart LR
-    renovate([Renovate]) -->|chart versions| latest["registry/latest.json"]
-    latest -->|"cue cmd promote"| pins["clusters/&lt;c&gt;/pins.json"]
+---
+config:
+  flowchart:
+    wrappingWidth: 260
+---
+flowchart TB
+    subgraph inputs["Versions"]
+        direction LR
+        renovate(["Renovate<br/>chart versions"]) --> latest["registry/latest.json"]
+        latest -->|"cue cmd promote"| pins["clusters/&lt;c&gt;/pins.json"]
+    end
 
     subgraph pr["Pull request here"]
-        direction TB
+        direction LR
         render["cue cmd render<br/>helm template"] --> checks["check: whitelists<br/>kubeconform · Kyverno"]
         checks --> diff["object diff<br/>as PR comment"]
     end
 
-    pins --> pr
-    pr -->|merge to main| release["release.yaml<br/>one signed OCI artifact<br/>per cluster and set"]
-    release -->|"PR: set digests<br/>(releases.json)"| gitops[("gitops")]
-    gitops -->|"signed artifact<br/>per cluster"| flux["Flux<br/>verifies signatures,<br/>applies the sets"]
+    subgraph delivery["After merge to main"]
+        direction LR
+        release["release.yaml<br/>signed artifact<br/>per cluster and set"] -->|"PR: digests<br/>releases.json"| gitops[("gitops")]
+        gitops -->|"signed OCI"| flux["Flux<br/>verifies signatures,<br/>applies the sets"]
+    end
+
+    inputs --> pr --> delivery
 ```
 
 This repository holds _inputs_: component definitions and the version pins of each cluster. Where
