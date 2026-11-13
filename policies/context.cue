@@ -77,7 +77,6 @@ import (
 
 		// This component's own kinds, spelled out: derived from its whitelist they would make
 		// component-whitelist depend on itself.
-		"rbac.authorization.k8s.io": clusterroles: true
 		"policies.kyverno.io": {
 			validatingpolicies:      true
 			imagevalidatingpolicies: true
