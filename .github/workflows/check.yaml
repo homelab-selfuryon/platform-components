@@ -6,9 +6,8 @@ name: Check
 # devenv (`devenv shell -- ...`, the base profile: what CI needs). Nothing here is signed, so it is
 # this repository's own workflow. `final-check` is the single required status check of the branch ruleset.
 #
-# Pushes to main run the same checks and keep what pull requests reuse: the Nix store of the devenv
-# shell (cache-nix-action, saved from main only, so a pull request cannot write a cache main reads)
-# and the render of each cluster (artifact `render-<cluster>`, the base side of the PR diff).
+# Pushes to main run the same checks and keep the render of each cluster (artifact
+# `render-<cluster>`): the base side of later pull requests' diffs.
 
 on:
   pull_request:
@@ -74,12 +73,6 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
       - uses: cachix/install-nix-action@91f6a0f59e94dfb2cfed0f4000f36a68ead1d20c # v31.11.4
-      - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
-        with:
-          primary-key: devenv-${{ runner.os }}-${{ env.DEVENV_VERSION }}-${{ hashFiles('head/devenv.lock', 'head/devenv.nix', 'head/devenv.yaml') }}
-          restore-prefixes-first-match: devenv-${{ runner.os }}-${{ env.DEVENV_VERSION }}-
-          save: ${{ github.event_name == 'push' }}
-          gc-max-store-size-linux: 4G
       - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: devenv # read-only: the public devenv cache, no auth token
