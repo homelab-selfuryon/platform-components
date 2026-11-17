@@ -118,7 +118,7 @@ B: #Schema... & {extra: 1}      // explicitly opened
 
 ## v0.18 pitfalls
 
-Constructs older CUE accepted that fail at v0.18 (seen in etherno-infra; none occur
+Constructs older CUE accepted that fail at v0.18 (seen in older code bases; none occur
 here, do not introduce them):
 
 1. **Selecting a struct out of a definition and adding a field to it.**

@@ -84,7 +84,9 @@ CEL policies (`policies.kyverno.io/v1`: ValidatingPolicy, ImageValidatingPolicy,
 DeletingPolicy), Enforce; `kyverno.io/v1 ClusterPolicy` is deprecated, add none. Test expressions with
 `scripts/kyverno-check.sh` (it type-checks them): policies that read `request.userInfo` run once per
 component with `--userinfo` as its Flux ServiceAccount; every run must end with no failures and no
-errors. The CLI does not apply policies to Kyverno's own policy kinds, so `component-whitelist` on
+errors. A policy that stops something gets a negative test, `policies/tests/<policy>.yaml`: objects
+annotated `test.homelab-selfuryon.github.io/expect: fail | pass`, namespaces in `policies/tests/values.yaml`.
+The CLI does not apply policies to Kyverno's own policy kinds, so `component-whitelist` on
 `kyverno-policies` itself is only enforced in the cluster. ClusterRoles a policy needs (aggregated to a Kyverno
 controller) go under `clusterRole` of its `_policy` entry and ship in `kyverno-policies-rbac` (set
 `platform`): by then the new `component-whitelist` knows their names. The cost: a new

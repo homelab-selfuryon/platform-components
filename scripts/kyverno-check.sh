@@ -14,8 +14,9 @@
 #              The CLI does not apply policies to Kyverno's own policy kinds: what
 #              kyverno-policies creates is only checked in the cluster.
 #
-# Every run must end with fail: 0 and error: 0. `kyverno apply` costs about objects x CRD size, so
-# each run gets only the objects its policies match and the CRDs of those objects' kinds.
+# Every run must end with fail: 0 and error: 0, and the negative tests in policies/tests/ must deny
+# what they mark `fail`. `kyverno apply` costs about objects x CRD size, so each run gets only the
+# objects its policies match and the CRDs of those objects' kinds.
 #
 # CRDs: from the render (variant A components: their approximate render); Cilium's and Flux's are
 # installed at runtime (operator, FluxInstance), so they come from the releases pinned in
@@ -89,6 +90,40 @@ status=0
 check static "$tmp/static.out" || status=1
 for dir in "$tmp"/admission/*/; do
   check "component-$(basename "$dir")" "$dir/out" || status=1
+done
+
+# Negative tests: policies/tests/<policy>.yaml holds objects the policy must deny or admit
+# (annotation test.homelab-selfuryon.github.io/expect: fail | pass), in the namespaces of
+# policies/tests/values.yaml. The render alone shows only that the policies admit what the
+# platform renders, never that they stop anything.
+for t in policies/tests/*.yaml; do
+  [[ $(basename "$t") == values.yaml ]] && continue
+  name=$(basename "$t" .yaml)
+  yq "select(.metadata.name == \"$name\")" "$policies" >"$tmp/test-policy.yaml"
+  [[ -s "$tmp/test-policy.yaml" ]] || {
+    echo "kyverno test [$name]: no rendered policy of that name" >&2
+    status=1
+    continue
+  }
+  kinds=$(yq -N '.kind' "$t" | sort -u | paste -sd'|')
+  yq "select(.kind == \"CustomResourceDefinition\" and (.spec.names.kind | test(\"^($kinds)\$\")))" \
+    "$tmp/crds.yaml" >"$tmp/test-crds.yaml"
+  kyverno apply "$tmp/test-policy.yaml" --resource "$t" --crd-paths "$tmp/test-crds.yaml" \
+    --values-file policies/tests/values.yaml >"$tmp/test.out" 2>&1 || true
+  failed=0
+  while IFS=$'\t' read -r ns kind obj expect; do
+    if grep -qF -- "-> resource $ns/$kind/$obj failed" "$tmp/test.out"; then got=fail; else got=pass; fi
+    if [[ $got != "$expect" ]]; then
+      echo "kyverno test [$name]: $kind $ns/$obj: expected $expect, got $got" >&2
+      failed=1
+    fi
+  done < <(yq -N '[.metadata.namespace, .kind, .metadata.name, .metadata.annotations["test.homelab-selfuryon.github.io/expect"]] | @tsv' "$t")
+  if [[ $failed == 1 ]] || grep -qE '^pass: [0-9]+, fail: [0-9]+, warn: [0-9]+, error: [1-9]' "$tmp/test.out"; then
+    cat "$tmp/test.out" >&2
+    status=1
+  else
+    echo "kyverno test [$name]: $(grep -E '^pass: ' "$tmp/test.out" | tail -1)"
+  fi
 done
 
 exit "$status"

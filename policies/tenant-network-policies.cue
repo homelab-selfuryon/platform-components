@@ -8,6 +8,9 @@ package policies
 //   egress   toEndpoints in the teams' namespaces (or kube-dns), toFQDNs by matchName,
 //            toEntities kube-apiserver, toPorts
 //
+// Every rule names its peers: to Cilium a rule with toPorts alone means "this port, any peer" (the
+// world and the node on egress, every source on ingress).
+//
 // Endpoint selectors: matchLabels only, keys `k8s:...` or `<prefix>/<name>`: an unprefixed key like
 // `host` would match Cilium's reserved labels (reserved:host, reserved:world), and
 // io.cilium.* keys select by namespace labels or ServiceAccount.
@@ -43,6 +46,12 @@ _policy: "tenant-network-policies": {
 			}, {
 				expression: "variables.egress.all(r, r.all(k, k in ['toEndpoints', 'toFQDNs', 'toEntities', 'toPorts']) && r.?toEntities.orValue([]).all(e, e == 'kube-apiserver') && r.?toFQDNs.orValue([]).all(f, f.all(k, k == 'matchName')))"
 				message:    "Tenant egress rules allow toEndpoints, toFQDNs (matchName), toEntities kube-apiserver and toPorts only."
+			}, {
+				expression: "variables.ingress.all(r, size(r.?fromEndpoints.orValue([])) > 0)"
+				message:    "Every tenant ingress rule names its sources in fromEndpoints: toPorts alone admits every source."
+			}, {
+				expression: "variables.egress.all(r, size(r.?toEndpoints.orValue([])) + size(r.?toFQDNs.orValue([])) + size(r.?toEntities.orValue([])) > 0)"
+				message:    "Every tenant egress rule names its destinations (toEndpoints, toFQDNs or toEntities): toPorts alone opens every destination."
 			}, {
 				expression: """
 					(variables.ingress.map(r, r.?fromEndpoints.orValue([])) + variables.egress.map(r, r.?toEndpoints.orValue([]))).all(ss, ss.all(s,

@@ -1,0 +1,62 @@
+# Negative tests of tenant-network-policies, run by scripts/kyverno-check.sh. The annotation
+# test.homelab-selfuryon.github.io/expect says whether the policy must admit (pass) or deny (fail).
+---
+# Cilium reads a rule with toPorts alone as "this port, any destination": the world, the node.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: egress-ports-only
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: fail
+spec:
+  endpointSelector: {}
+  egress:
+    - toPorts: [{ ports: [{ port: "443", protocol: TCP }] }]
+---
+# ... and on ingress "this port, any source".
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: ingress-ports-only
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: fail
+spec:
+  endpointSelector: {}
+  ingress:
+    - toPorts: [{ ports: [{ port: "8080", protocol: TCP }] }]
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: egress-world
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: fail
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities: [world]
+---
+# What platform-kit renders: every rule names its peers.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: with-peers
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: pass
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+            k8s:homelab-selfuryon.github.io/component: gateway-proxy
+      toPorts: [{ ports: [{ port: "8080" }] }]
+  egress:
+    - toFQDNs: [{ matchName: example.com }]
+      toPorts: [{ ports: [{ port: "443" }] }]
+    - toEntities: [kube-apiserver]
+      toPorts: [{ ports: [{ port: "443" }, { port: "6443" }] }]
