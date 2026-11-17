@@ -1,0 +1,11 @@
+# Namespace labels for the negative tests (kyverno apply --values-file): the CLI does not read them
+# from Namespace objects.
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Value
+metadata:
+  name: values
+namespaceSelector:
+  - name: notes-staging
+    labels:
+      homelab-selfuryon.github.io/team: notes
+      homelab-selfuryon.github.io/env: staging
