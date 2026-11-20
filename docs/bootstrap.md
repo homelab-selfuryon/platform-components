@@ -71,7 +71,7 @@ nothing else), the OCIRepository `gitops` (cosign-verified: the certificate subj
 
 From here Flux applies the sets in order: `rbac` (namespaces, component ServiceAccounts and roles),
 `system` (Cilium, Flux Operator, Kyverno, Gateway API CRDs, cert-manager, the internal CA),
-`policy` (Kyverno policies, host firewall), `platform` (local-path, metrics-server, VictoriaMetrics, Envoy Gateway,
+`policy` (Kyverno policies, host firewall), `platform` (local-path, metrics-server, VictoriaMetrics, OpenCost, Envoy Gateway,
 external-dns, CloudNativePG, the CSI driver, OpenBao and its CSI provider, Argo CD, ClusterIssuers,
 Gateways), `tenants` (teams). Watch it:
 
