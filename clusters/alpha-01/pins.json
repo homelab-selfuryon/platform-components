@@ -11,7 +11,7 @@
   "external-dns": "1.23.0",
   "cnpg": "0.29.2",
   "cnpg-operator": "1.30.2@sha256:f96f6be3d81ec93819b443c665c575c609342fca840df90d4d87dae314a5b913",
-  "postgresql": "18.7-system-trixie@sha256:b4bbd2e623f1a8833e9a2a4210480ef215b6d13fc0988b06786a778a5c699a20",
+  "postgresql": "19.0-system-trixie@sha256:789b58fff514c28a42844962951c0556cedecaa8d3f35678bc86162fddad9f18",
   "secrets-store-csi-driver": "1.6.2",
   "openbao": "0.30.7",
   "argocd": "10.18.2@sha256:0c5a6e307e6826067e18cb79fb0c7fee03338991da80037e8061f9d70c001073",
