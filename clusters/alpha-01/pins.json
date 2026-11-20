@@ -1,6 +1,6 @@
 {
-  "cilium": "1.20.4",
-  "flux-operator": "0.62.1@sha256:1135514a01cc11e206f5ff0b568ac30d9defd675022b7a9da88d4a3474fbdf13",
+  "cilium": "1.20.5",
+  "flux-operator": "0.63.0@sha256:62c547ad36803ebc2d679d0b50c1e1ad965cfec6352f27720907361e411891d2",
   "flux": "v2.10.0",
   "kyverno": "3.10.0@sha256:290ff54d4b7d015ce2ffe5be84b60e2db5a59d8c5dcea772a8f6e32475c2eba2",
   "gateway-api": "1.10.0@sha256:494cc4b63dcb1c828e64a3af2b10e5519f6c11035eba98f331854eb0c04b9d74",
@@ -9,11 +9,11 @@
   "metrics-server": "3.14.0",
   "envoy-gateway": "1.10.0@sha256:62fe8cca72a8770bb33900dd5c0990011ab98f2d6f4420c449ce44b1ca4eebe6",
   "external-dns": "1.23.0",
-  "cnpg": "0.29.1",
-  "cnpg-operator": "1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07",
-  "postgresql": "18.7-system-trixie@sha256:5a5dfbde88d5909fd4938189c141f53fb153f53c519f14907dce9e7c04baa153",
+  "cnpg": "0.29.2",
+  "cnpg-operator": "1.30.2@sha256:f96f6be3d81ec93819b443c665c575c609342fca840df90d4d87dae314a5b913",
+  "postgresql": "18.7-system-trixie@sha256:b4bbd2e623f1a8833e9a2a4210480ef215b6d13fc0988b06786a778a5c699a20",
   "secrets-store-csi-driver": "1.6.2",
   "openbao": "0.30.7",
-  "argocd": "10.18.0@sha256:b9e529e96ae02d215dd4a3d354a40f7f393f4a3379337114de5926f99b7ac52e",
+  "argocd": "10.18.2@sha256:0c5a6e307e6826067e18cb79fb0c7fee03338991da80037e8061f9d70c001073",
   "victoria-metrics": "0.51.0@sha256:f1e54bd4cdb489eb3e7fd31e0993bef1a6cf87877f9dedf0c91238390c18f06a"
 }
