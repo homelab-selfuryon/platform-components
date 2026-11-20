@@ -46,6 +46,9 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 					loggerFormat:     "json"
 					// The cluster is IPv6-first.
 					enableTCP6: true
+					// The scrape config is a ConfigMap and the chart does not restart the pod when it
+					// changes: re-read it every minute.
+					"promscrape.configCheckInterval": "1m"
 				}
 				persistentVolume: {
 					enabled: true
