@@ -62,6 +62,13 @@
       "digest": "sha256:f1e54bd4cdb489eb3e7fd31e0993bef1a6cf87877f9dedf0c91238390c18f06a"
     },
     {
+      "name": "opencost",
+      "datasource": "docker",
+      "package": "ghcr.io/opencost/charts/opencost",
+      "version": "2.5.34",
+      "digest": "sha256:03198937c17d9ca8bddbb95367d030265d906090e124298696c7ca9889824ec0"
+    },
+    {
       "name": "envoy-gateway",
       "datasource": "docker",
       "package": "docker.io/envoyproxy/gateway-helm",

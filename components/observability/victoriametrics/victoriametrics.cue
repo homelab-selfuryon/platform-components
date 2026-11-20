@@ -3,8 +3,8 @@ package victoriametrics
 import "github.com/homelab-selfuryon/platform-components/schema"
 
 // VictoriaMetrics single-node: the cluster's metrics store, scraping its targets itself (no
-// vmagent, no operator, no node-exporter). Today it scrapes the kubelets (node and cAdvisor
-// metrics) and itself; OpenCost reads it through the Prometheus API. No UI and no Gateway route:
+// vmagent, no operator, no node-exporter). It scrapes the kubelets (node and cAdvisor metrics),
+// OpenCost and itself; OpenCost reads it through the Prometheus API. No UI and no Gateway route:
 // `kubectl port-forward` to 8428 (vmui at /vmui) until human access to web UIs is decided.
 #VictoriaMetrics: {
 	#cluster: schema.#Cluster
@@ -80,6 +80,9 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 							{job_name: "victoriametrics", static_configs: [{targets: ["localhost:8428"]}]},
 							_kubelet & {job_name: "kubelet", metrics_path: "/metrics"},
 							_kubelet & {job_name: "cadvisor", metrics_path: "/metrics/cadvisor"},
+							// OpenCost: its cost metrics and the kube-state-style metrics it emits (their
+							// namespace and pod labels are the objects', not the target's).
+							{job_name: "opencost", honor_labels: true, static_configs: [{targets: ["opencost.opencost-system.svc:9003"]}]},
 						]
 					}
 				}
@@ -87,10 +90,19 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 		}
 
 		network: {
+			ingress: [{
+				// OpenCost queries the Prometheus API.
+				fromEndpoints: [{matchLabels: {"k8s:io.kubernetes.pod.namespace": "opencost-system"}}]
+				toPorts:       [{ports: [{port: "8428", protocol: "TCP"}]}]
+			}]
 			egress: [
 				schema.Net.apiserverOut,
 				// kubelets
 				{toEntities: ["host", "remote-node"], toPorts: [{ports: [{port: "10250", protocol: "TCP"}]}]},
+				{
+					toEndpoints: [{matchLabels: {"k8s:io.kubernetes.pod.namespace": "opencost-system"}}]
+					toPorts:     [{ports: [{port: "9003", protocol: "TCP"}]}]
+				},
 			]
 		}
 

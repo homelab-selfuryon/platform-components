@@ -21,7 +21,7 @@ clusters/      defaults.cue (#Platform: all components), clusters.cue (registry)
 crd/           generated schemas (Cilium, Flux Operator, Kyverno policies); see the crd-generation skill
 ext_tool.cue   clusters | render | check | bootstrap | promote
 scripts/       render_component.py (helm + patches + hook policy), check_whitelist.py, kyverno-check.sh, ...
-docs/          bootstrap.md (+ break-glass), secrets.md, gateways.md, teams.md
+docs/          bootstrap.md (+ break-glass), secrets.md, gateways.md, teams.md, finops.md
 ```
 
 ## Commands
