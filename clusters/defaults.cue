@@ -15,6 +15,7 @@ import (
 	app_localpath "github.com/homelab-selfuryon/platform-components/components/storage/localpath"
 	app_cnpg "github.com/homelab-selfuryon/platform-components/components/storage/cnpg"
 	app_metricsserver "github.com/homelab-selfuryon/platform-components/components/observability/metricsserver"
+	app_victoriametrics "github.com/homelab-selfuryon/platform-components/components/observability/victoriametrics"
 	app_envoygateway "github.com/homelab-selfuryon/platform-components/components/network/envoygateway"
 	app_gateways "github.com/homelab-selfuryon/platform-components/components/network/gateways"
 	app_externaldns "github.com/homelab-selfuryon/platform-components/components/network/externaldns"
@@ -86,6 +87,7 @@ import (
 
 		"local-path-provisioner":   (app_localpath.#LocalPath & {#cluster: config, #ref: versions["local-path-provisioner"]}).component
 		"metrics-server":           (app_metricsserver.#MetricsServer & {#cluster: config, #ref: versions["metrics-server"]}).component
+		"victoria-metrics":         (app_victoriametrics.#VictoriaMetrics & {#cluster: config, #ref: versions["victoria-metrics"]}).component
 		"envoy-gateway":            (app_envoygateway.#EnvoyGateway & {#cluster: config, #ref: versions["envoy-gateway"]}).component
 		"external-dns":             (app_externaldns.#ExternalDNS & {#cluster: config, #ref: versions["external-dns"]}).component
 		cnpg:                       (app_cnpg.#CNPG & {#cluster: config, #ref: versions.cnpg, #operatorRef: versions["cnpg-operator"], #postgresRef: versions.postgresql}).component

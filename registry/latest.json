@@ -55,6 +55,13 @@
       "version": "3.14.0"
     },
     {
+      "name": "victoria-metrics",
+      "datasource": "docker",
+      "package": "ghcr.io/victoriametrics/helm-charts/victoria-metrics-single",
+      "version": "0.51.0",
+      "digest": "sha256:f1e54bd4cdb489eb3e7fd31e0993bef1a6cf87877f9dedf0c91238390c18f06a"
+    },
+    {
       "name": "envoy-gateway",
       "datasource": "docker",
       "package": "docker.io/envoyproxy/gateway-helm",
