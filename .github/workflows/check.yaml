@@ -81,6 +81,10 @@ jobs:
           nix profile install --accept-flake-config --profile "$RUNNER_TEMP/devenv" "github:cachix/devenv/${DEVENV_VERSION}#devenv"
           echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
 
+      - name: Unit tests
+        working-directory: head
+        run: devenv shell -- python3 -m unittest discover -s scripts -p "test_*.py"
+
       - name: Render and check
         working-directory: head
         run: |

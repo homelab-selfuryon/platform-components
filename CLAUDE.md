@@ -10,7 +10,7 @@ change it there in the same session as here.
 
 ```
 schema/        #Cluster, #Component, #Chart, #Allow (whitelist), typed manifests (types.cue)
-registry/      latest.json (Renovate) + #Resolve
+registry/      latest.json (Renovate) + #Resolve + promotion.cue (holds)
 render/        #Rendered: component -> Kustomization + plain objects + meta; #Complete adds network policies
 components/<category>/<name>/   one package per component: #X: {#cluster, #ref, component: schema.#Component & {...}}
 policies/      Kyverno CEL policies, one file per policy (`_policy: "<name>"`, values from `#ctx`: context.cue);
@@ -31,7 +31,8 @@ devenv shell -- bash scripts/cue-vet.bash                 # cue fmt --check + ve
 devenv shell -- cue cmd render -t cluster=alpha-01        # needs network (helm); ~1-2 min
 devenv shell -- cue cmd check  -t cluster=alpha-01
 devenv shell -- cue cmd bootstrap -t cluster=alpha-01
-devenv shell -- cue cmd promote -t to=alpha-01 [-t from=latest] [-t components=cilium,kyverno]
+devenv shell -- cue cmd promote -t to=alpha-01 [-t from=latest] [-t components=cilium,kyverno] [-t exclude=..] [-t allow_major=true] [-t ignore_holds=true]
+devenv shell -- python3 -m unittest discover -s scripts -p "test_*.py"   # scripts/test_*.py
 devenv shell -- bash scripts/kyverno-check.sh alpha-01    # rendered policies over the rendered objects
 devenv --profile ops shell -- kubectl ...                 # cluster tools (talosctl, flux, argocd, ...): profile `ops`
 ```
@@ -63,7 +64,9 @@ devenv --profile ops shell -- kubectl ...                 # cluster tools (talos
 - devenv: the base shell is what CI needs (render, check, Kyverno) and what CI caches; cluster and
   release tools live in the `ops` profile (`.envrc` enables it). A tool CI needs goes into the base.
 - Versions: `registry/latest.json` (Renovate) -> `cue cmd promote` -> `clusters/<c>/pins.json`.
-  Field order in latest.json is a Renovate regex contract.
+  Field order in latest.json is a Renovate regex contract. Promotion policy (scripts/promote.py):
+  holds in `registry/promotion.cue`, `freeze` in a cluster's config, no downgrades (roll back by
+  editing pins.json), a new major version only with `components` + `allow_major`.
 - Rendering must stay deterministic: render twice and `diff -r out/<c>` (hidden dirs excluded)
   after changing a chart's values.
 - Releases and `releases.json` are in `gitops`, not here. CI logic is in `github-workflows`;

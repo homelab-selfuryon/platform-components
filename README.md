@@ -74,7 +74,7 @@ cue cmd clusters                              # JSON: clusters, publish flag, se
 cue cmd render  -t cluster=alpha-01           # out/<c>/<set>/{flux,components/<name>}/  (needs network: helm pulls charts)
 cue cmd check   -t cluster=alpha-01           # every cluster-scoped object of the render must match its component's whitelist
 cue cmd bootstrap -t cluster=alpha-01         # out/<c>/bootstrap.yaml, applied by hand once (docs/bootstrap.md)
-cue cmd promote -t to=alpha-01 [-t from=latest|<cluster>] [-t components=a,b]    # clusters/<to>/pins.json
+cue cmd promote -t to=alpha-01 [-t from=latest|<cluster>] [-t components=a,b]    # clusters/<to>/pins.json, under registry/promotion.cue
 bash scripts/cue-vet.bash                     # cue fmt --check and vet of every package
 bash scripts/kyverno-check.sh alpha-01        # the rendered policies over the render; userInfo policies per component SA
 ```

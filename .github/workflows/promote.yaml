@@ -2,12 +2,14 @@ name: Promote
 
 # Moves component versions into a cluster's pins.json through a PR: from registry/latest.json
 # (Renovate keeps it current) or from what another cluster currently runs (alpha-01 -> the next
-# cluster). `cue cmd promote`, see ext_tool.cue. The PR is the review: its checks render the
-# cluster, check the whitelists and show the object diff.
+# cluster). `cue cmd promote` (ext_tool.cue, scripts/promote.py) applies the promotion policy:
+# holds (registry/promotion.cue), the cluster's freeze, no downgrades, a new major version only for
+# named components with allow_major. The PR lists what moves and what was skipped and why; its
+# checks render the cluster, check the whitelists and show the object diff.
 #
-# The PR is opened with GITHUB_TOKEN (same repository, no cross-repository access needed), so
-# GitHub does not start the PR checks by itself: push an empty commit or close and reopen the PR
-# once to run them.
+# A run with no components, exclusions or overrides writes branch promote/<to> (the next such run
+# rebuilds it); any other run gets its own branch, so a targeted PR under review is not overwritten.
+# The PR is opened with an octo-sts token, so its checks start as usual.
 
 on:
   workflow_dispatch:
@@ -24,6 +26,18 @@ on:
         description: "Comma-separated components (empty: all the target runs)"
         required: false
         default: ""
+      exclude:
+        description: "Comma-separated components to leave alone this run"
+        required: false
+        default: ""
+      allow_major:
+        description: "Let the named components move to a new major version"
+        type: boolean
+        default: false
+      ignore_holds:
+        description: "Move components that a hold or the cluster's freeze stops"
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -40,14 +54,26 @@ jobs:
       id-token: write # octo-sts (policy: .github/chainguard/promote.sts.yaml)
     steps:
       - name: Validate inputs
+        id: scope
         run: |
+          set -euo pipefail
           [[ "$TO" =~ ^[a-z][a-z0-9-]{1,40}$ ]] || { echo "bad target"; exit 1; }
           [[ "$FROM" == latest || "$FROM" =~ ^[a-z][a-z0-9-]{1,40}$ ]] || { echo "bad source"; exit 1; }
           [[ -z "$COMPONENTS" || "$COMPONENTS" =~ ^[a-z0-9,-]+$ ]] || { echo "bad component list"; exit 1; }
+          [[ -z "$EXCLUDE" || "$EXCLUDE" =~ ^[a-z0-9,-]+$ ]] || { echo "bad exclude list"; exit 1; }
+          if [[ -z "${COMPONENTS}${EXCLUDE}" && "$ALLOW_MAJOR" != true && "$IGNORE_HOLDS" != true ]]; then
+            echo "branch=promote/${TO}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=promote/${TO}-${RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
         env:
           TO: ${{ inputs.to }}
           FROM: ${{ inputs.from }}
           COMPONENTS: ${{ inputs.components }}
+          EXCLUDE: ${{ inputs.exclude }}
+          ALLOW_MAJOR: ${{ inputs.allow_major }}
+          IGNORE_HOLDS: ${{ inputs.ignore_holds }}
+          RUN_NUMBER: ${{ github.run_number }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -58,13 +84,16 @@ jobs:
 
       - name: Promote versions
         run: |
-          cp "clusters/${TO}/pins.json" "$RUNNER_TEMP/pins.old.json"
-          devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS"
-          devenv shell -- scripts/promote-summary.sh "$RUNNER_TEMP/pins.old.json" "clusters/${TO}/pins.json" registry/latest.json "$TO" "$FROM" > "$RUNNER_TEMP/body.md"
+          devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS" -t exclude="$EXCLUDE" \
+            -t allow_major="$ALLOW_MAJOR" -t ignore_holds="$IGNORE_HOLDS" -t body="$RUNNER_TEMP/body.md"
+          cat "$RUNNER_TEMP/body.md" >> "$GITHUB_STEP_SUMMARY"
         env:
           TO: ${{ inputs.to }}
           FROM: ${{ inputs.from }}
           COMPONENTS: ${{ inputs.components }}
+          EXCLUDE: ${{ inputs.exclude }}
+          ALLOW_MAJOR: ${{ inputs.allow_major }}
+          IGNORE_HOLDS: ${{ inputs.ignore_holds }}
 
       - name: Token for this repository
         id: octo-sts
@@ -76,7 +105,7 @@ jobs:
       - uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           token: ${{ steps.octo-sts.outputs.token }}
-          branch: promote/${{ inputs.to }}
+          branch: ${{ steps.scope.outputs.branch }}
           sign-commits: true
           delete-branch: true
           add-paths: clusters/${{ inputs.to }}/pins.json
