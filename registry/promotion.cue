@@ -6,7 +6,7 @@ import "github.com/homelab-selfuryon/platform-components/schema"
 //
 // holds: components whose pins must not move on any cluster, whatever the source offers. A hold
 // lapses after `until`; delete it to lift it earlier. `-t ignore_holds=true` overrides for one run.
-// A cluster-wide freeze is `freeze` in the cluster's config (schema.#Cluster).
+// Holds on one cluster only: `holds` in that cluster's config (schema.#Cluster), same shape.
 //
 //   holds: "cilium": {reason: "1.21 breaks the host firewall, upstream issue #123", since: "2026-11-23"}
 holds: [string]~(N,_): schema.#Hold & {

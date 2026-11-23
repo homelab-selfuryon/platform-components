@@ -86,10 +86,14 @@ class Policy(unittest.TestCase):
         hold = dict(self.HOLD, until=TODAY)
         self.assertIn("x", run({"x": "1.0.0"}, {"x": "1.1.0"}, holds={"x": hold}).skipped)
 
-    def test_freeze(self):
-        p = run({"x": "1.0.0"}, {"x": "1.1.0"}, freeze=self.HOLD)
-        self.assertIn("frozen", p.skipped["x"][2])
-        self.assertIn("x", run({"x": "1.0.0"}, {"x": "1.1.0"}, freeze=self.HOLD, ignoreHolds=True).moves)
+    def test_cluster_hold(self):
+        p = run({"x": "1.0.0", "y": "1.0.0"}, {"x": "1.1.0", "y": "1.1.0"}, clusterHolds={"x": self.HOLD})
+        self.assertIn("held on alpha-01", p.skipped["x"][2])
+        self.assertIn("y", p.moves)
+        p = run({"x": "1.0.0"}, {"x": "1.1.0"}, clusterHolds={"x": self.HOLD}, ignoreHolds=True)
+        self.assertIn("x", p.moves)
+        hold = dict(self.HOLD, until="2026-11-22")
+        self.assertIn("x", run({"x": "1.0.0"}, {"x": "1.1.0"}, clusterHolds={"x": hold}).moves)
 
     def test_exclude(self):
         p = run({"x": "1.0.0", "y": "1.0.0"}, {"x": "1.1.0", "y": "1.1.0"}, excluded=["x"])

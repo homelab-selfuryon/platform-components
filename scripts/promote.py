@@ -5,22 +5,23 @@
 
 The input is `_promote.input` of ext_tool.cue: target, source, offered ({name: version} of the
 source), pins (the target's pins.json), resolved (names the target runs), named, excluded,
-allowMajor, ignoreHolds, holds ({name: {reason, since, until?}}, registry/promotion.cue) and the
-target's freeze ({reason, since, until?}) if it has one. Versions are "1.2.3" or "1.2.3@sha256:...".
+allowMajor, ignoreHolds, holds ({name: {reason, since, until?}}, registry/promotion.cue: every cluster)
+and clusterHolds (the same shape, `holds` in the target's config: this cluster only). Versions are
+"1.2.3" or "1.2.3@sha256:...".
 
 Considered: the `named` components if any, else every component the target resolves; minus
 `excluded`. A considered component moves to the offered version unless one of these says no:
 
-  freeze     the target is frozen                                 ignoreHolds overrides
-  hold       registry/promotion.cue holds the component           ignoreHolds overrides
+  hold       the target's config or registry/promotion.cue holds   ignoreHolds overrides
+             the component
   downgrade  the offered version is older than the pin            nothing: roll back by editing pins.json
   major      the first number changes (18.7 -> 19.0)              named, with allowMajor
   variant    the suffix changes (18.7-system-trixie ->            named
              18.7-standard-trixie, 1.2.3-rc.1 -> 1.2.3)
   unparsed   a version is not <n>[.<n>...][-suffix] (v allowed)   named
 
-The same version with another digest moves (the tag was rebuilt). A freeze or hold whose `until`
-has passed no longer applies. Major means the first number only: 0.29 -> 0.30 moves like a minor
+The same version with another digest moves (the tag was rebuilt). A hold whose `until` has passed
+no longer applies. Major means the first number only: 0.29 -> 0.30 moves like a minor
 (charts at 0.x bump the minor on every release). A named component the target does not pin yet is
 added. Existing pins keep their order, new ones are appended.
 """
@@ -76,7 +77,7 @@ class Plan:
 
 
 def gate(name: str, old: str, new: str, *, named: bool, allow_major: bool) -> str | None:
-    """Why `name` must not move from `old` to `new` (None: it may). Holds and freezes are not here."""
+    """Why `name` must not move from `old` to `new` (None: it may). Holds are not here."""
     o, n = parse(old), parse(new)
     if o is None or n is None:
         return None if named else f"`{old if o is None else new}` is not a version; name it to move it"
@@ -99,7 +100,7 @@ def plan(inp: dict, today: str) -> Plan:
     ignore_holds = bool(inp.get("ignoreHolds"))
     allow_major = bool(inp.get("allowMajor"))
     holds: dict = inp.get("holds") or {}
-    freeze = inp.get("freeze")
+    cluster_holds: dict = inp.get("clusterHolds") or {}
 
     unknown = [n for n in named + excluded if n not in offered and n not in pins]
     if unknown:
@@ -119,8 +120,8 @@ def plan(inp: dict, today: str) -> Plan:
         if old == new:
             continue
         reason = None
-        if _active(freeze, today) and not ignore_holds:
-            reason = f"cluster frozen: {_hold_text(freeze)}"
+        if _active(cluster_holds.get(name), today) and not ignore_holds:
+            reason = f"held on {inp['target']}: {_hold_text(cluster_holds[name])}"
         elif _active(holds.get(name), today) and not ignore_holds:
             reason = f"held: {_hold_text(holds[name])}"
         elif old is not None:

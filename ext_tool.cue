@@ -185,8 +185,9 @@ command: check: {
 //                 [-t allow_major=true] [-t ignore_holds=true] [-t body=<file>]
 //
 // Moves component versions into clusters/<to>/pins.json, from latest.json or from the versions
-// another cluster currently resolves, under the promotion policy: holds (registry/promotion.cue),
-// the target's freeze, no downgrades, a new major only for named components with allow_major.
+// another cluster currently resolves, under the promotion policy: holds (registry/promotion.cue on
+// every cluster, `holds` in the target's config on that one), no downgrades, a new major only for
+// named components with allow_major.
 // scripts/promote.py decides and writes; its docstring has the rules. Without `components` it
 // considers every component the target resolves; a named one may also be added to the pins (a new
 // component on the stable channel). Digests travel with the version ("1.2.3@sha256:...").
@@ -218,19 +219,17 @@ _promote: {
 
 	// The input of scripts/promote.py.
 	input: {
-		target:      _to
-		source:      _from
-		offered:     _source
-		pins:        _target.#pins
-		resolved:    [for n, _ in _target.resolved {n}]
-		named:       _named
-		excluded:    _excluded
-		allowMajor:  _allowMajor
-		ignoreHolds: _ignoreHolds
-		holds:       registry.holds
-		if _target.config.freeze != _|_ {
-			freeze: _target.config.freeze
-		}
+		target:       _to
+		source:       _from
+		offered:      _source
+		pins:         _target.#pins
+		resolved:     [for n, _ in _target.resolved {n}]
+		named:        _named
+		excluded:     _excluded
+		allowMajor:   _allowMajor
+		ignoreHolds:  _ignoreHolds
+		holds:        registry.holds
+		clusterHolds: _target.config.holds
 	}
 }
 
