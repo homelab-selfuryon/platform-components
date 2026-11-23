@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Renders one component into its directory of the set artifact.
+"""Renders one component into its directory of the cluster artifact.
 
 Usage: render_component.py <workdir> <outdir> [<approx-file>]
 

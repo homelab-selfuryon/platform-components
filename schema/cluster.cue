@@ -8,7 +8,7 @@ package schema
 	// applies them in). Every component belongs to one of them.
 	sets: [...string]
 
-	// Publish set artifacts on `main`. Off for clusters that exist only as manifests (rendered
+	// Publish the cluster artifact on `main`. Off for clusters that exist only as manifests (rendered
 	// and diffed in PRs, never deployed).
 	publish: *true | bool
 

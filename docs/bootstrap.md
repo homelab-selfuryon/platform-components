@@ -163,7 +163,7 @@ For when the normal path is gone: GitHub, GHCR, the private access network, or F
   API audit log shows `system:masters` activity. Anything changed by hand is put back into git
   afterwards: Flux reverts drift on its next reconciliation anyway.
 - **Flux stuck.** `flux suspend kustomization <name>` to stop a component, fix the source, `flux
-resume`. A broken set artifact is rolled back by reverting its digest in `gitops`; if `gitops` is
+resume`. A broken release is rolled back by reverting its digest in `gitops`; if `gitops` is
   unreachable, re-apply `bootstrap.yaml` pointing the OCIRepository at a known-good tag.
 - **Tenant emergency (exec into a pod).** Tenants cannot exec, attach or port-forward; break-glass
   can, and is audited. Prefer logs and a new revision.

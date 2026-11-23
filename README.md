@@ -31,7 +31,7 @@ flowchart TB
 
     subgraph delivery["After merge to main"]
         direction LR
-        release["release.yaml<br/>signed artifact<br/>per cluster and set"] -->|"PR: digests<br/>releases.json"| gitops[("gitops")]
+        release["release.yaml<br/>signed artifact<br/>per cluster"] -->|"PR: digest<br/>releases.json"| gitops[("gitops")]
         gitops -->|"signed OCI"| flux["Flux<br/>verifies signatures,<br/>applies the sets"]
     end
 
@@ -40,7 +40,7 @@ flowchart TB
 
 This repository holds _inputs_: component definitions and the version pins of each cluster. Where
 each cluster runs which artifact (the output lock) is `gitops`; rollback is a revert there. PR checks
-call `components-check.yaml` from `github-workflows`. The release (push and sign the set artifacts,
+call `components-check.yaml` from `github-workflows`. The release (push and sign the cluster artifact,
 PR to `gitops`) runs in this repository's own `.github/workflows/release.yaml`, so the signature
 names this repository and `main` — Flux accepts nothing else.
 
@@ -81,8 +81,8 @@ bash scripts/kyverno-check.sh alpha-01        # the rendered policies over the r
 
 ## Sets and components on `alpha-01`
 
-One signed artifact per set and cluster: `components/<name>/{kustomization.yaml,manifests.yaml}` plus
-`flux/kustomizations.yaml`, one Flux `Kustomization` per component, each with its own ServiceAccount.
+One signed artifact per cluster, a directory per set: `<set>/components/<name>/{kustomization.yaml,manifests.yaml}` plus
+`<set>/flux/kustomizations.yaml`, one Flux `Kustomization` per component, each with its own ServiceAccount.
 
 | Set        | Components (version)                                                                                                                                                                                                                                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -107,7 +107,7 @@ pinned by digest as well (`1.2.3@sha256:...`): Helm verifies the content.
   (policy `helmrelease-service-accounts`); CI still renders the chart, hooks included, to
   `out/<c>/.approx` for the diff, the whitelist and Kyverno without publishing it. Only privileged
   components may use it for now.
-- **Deterministic.** Two renders of the same inputs are byte-identical (checked), so an unchanged set is
+- **Deterministic.** Two renders of the same inputs are byte-identical (checked), so an unchanged platform is
   never re-published.
 - **Cluster-scoped whitelist, enforced three times.** A component lists the cluster-scoped kinds and
   names it may create. `cue cmd check` verifies the render; the `rbac` set gives the component's Flux

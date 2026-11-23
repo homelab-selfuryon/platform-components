@@ -2,7 +2,7 @@
 
 Platform repository of the homelab-selfuryon org: clusters, platform components, Kyverno policies and
 team onboarding, written in CUE, rendered in CI (`helm template`), released as one signed OCI
-artifact per cluster and set, delivered by Flux (Argo CD only syncs tenants). The contract with `gitops`, `github-workflows` and `platform-kit` is
+artifact per cluster (a directory per set), delivered by Flux (Argo CD only syncs tenants). The contract with `gitops`, `github-workflows` and `platform-kit` is
 `meta/delivery.md` ("Platform layout", "Flux object names", "CI interfaces", "Cluster-side names"):
 change it there in the same session as here.
 
