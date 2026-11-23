@@ -10,14 +10,14 @@ change it there in the same session as here.
 
 ```
 schema/        #Cluster, #Component, #Chart, #Allow (whitelist), typed manifests (types.cue)
-registry/      latest.json (Renovate) + #Resolve + promotion.cue (holds)
+registry/      latest.json (Renovate) + #Resolve + holds.cue (promotion holds, every cluster)
 render/        #Rendered: component -> Kustomization + plain objects + meta; #Complete adds network policies
 components/<category>/<name>/   one package per component: #X: {#cluster, #ref, component: schema.#Component & {...}}
 policies/      Kyverno CEL policies, one file per policy (`_policy: "<name>"`, values from `#ctx`: context.cue);
                whitelists/ServiceAccounts/Kustomization names come from the components
 teams/         teams/<name>.cue (data) + schema.cue + component.cue (render of `team-<name>`)
 bootstrap/     #Bootstrap (flux-privileged, gitops-root, OCIRepository gitops, root Kustomization)
-clusters/      defaults.cue (#Platform: all components), clusters.cue (registry), <c>/{cluster.cue,pins.json,talos/}
+clusters/      defaults.cue (#Platform: all components), clusters.cue (registry), <c>/{cluster.cue,pins.json,holds.cue,talos/}
 crd/           generated schemas (Cilium, Flux Operator, Kyverno policies); see the crd-generation skill
 ext_tool.cue   clusters | render | check | bootstrap | promote
 scripts/       render_component.py (helm + patches + hook policy), check_whitelist.py, kyverno-check.sh, ...
@@ -65,7 +65,7 @@ devenv --profile ops shell -- kubectl ...                 # cluster tools (talos
   release tools live in the `ops` profile (`.envrc` enables it). A tool CI needs goes into the base.
 - Versions: `registry/latest.json` (Renovate) -> `cue cmd promote` -> `clusters/<c>/pins.json`.
   Field order in latest.json is a Renovate regex contract. Promotion policy (scripts/promote.py):
-  holds in `registry/promotion.cue` (every cluster) and `holds` in a cluster's config (that one), no
+  holds in `registry/holds.cue` (every cluster) and `clusters/<c>/holds.cue` (that one), no
   downgrades (roll back by editing pins.json), a new major version only with `components` +
   `allow_major`.
 - A new cluster also goes into the `to`/`from` options of `.github/workflows/promote.yaml` (the

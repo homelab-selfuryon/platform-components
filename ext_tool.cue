@@ -185,8 +185,8 @@ command: check: {
 //                 [-t allow_major=true] [-t ignore_holds=true] [-t body=<file>]
 //
 // Moves component versions into clusters/<to>/pins.json, from latest.json or from the versions
-// another cluster currently resolves, under the promotion policy: holds (registry/promotion.cue on
-// every cluster, `holds` in the target's config on that one), no downgrades, a new major only for
+// another cluster currently resolves, under the promotion policy: holds (registry/holds.cue on
+// every cluster, clusters/<to>/holds.cue on that one), no downgrades, a new major only for
 // named components with allow_major.
 // scripts/promote.py decides and writes; its docstring has the rules. Without `components` it
 // considers every component the target resolves; a named one may also be added to the pins (a new

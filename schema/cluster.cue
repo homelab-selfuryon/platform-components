@@ -17,11 +17,8 @@ import "time"
 	// Version channel, see registry.#Resolve.
 	channel: *"fast" | "stable"
 
-	// Promotion holds on this cluster only, keyed by component (registry/promotion.cue holds on every
-	// cluster): `cue cmd promote` leaves the pin alone while the hold lasts; `-t ignore_holds=true`
-	// overrides. Releases are unaffected: they publish what is pinned.
-	//
-	//   holds: "victoria-metrics": {reason: "disk migration first", since: "2026-11-24", until: "2026-12-01"}
+	// Promotion holds on this cluster only, keyed by component: written in clusters/<c>/holds.cue
+	// (registry/holds.cue holds on every cluster). Releases are unaffected: they publish what is pinned.
 	holds: [string]: #Hold
 
 	// Base domain of the platform: Gateway hostnames, external-dns records, certificates.
@@ -87,7 +84,7 @@ import "time"
 	}
 }
 
-// Why a component must not move, and since when (promotion holds: registry/promotion.cue, a cluster's config).
+// Why a component must not move, and since when (promotion holds: registry/holds.cue, clusters/<c>/holds.cue).
 #Hold: {
 	reason!: string
 	since!:  time.Format("2006-01-02")

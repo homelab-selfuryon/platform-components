@@ -5,15 +5,15 @@
 
 The input is `_promote.input` of ext_tool.cue: target, source, offered ({name: version} of the
 source), pins (the target's pins.json), resolved (names the target runs), named, excluded,
-allowMajor, ignoreHolds, holds ({name: {reason, since, until?}}, registry/promotion.cue: every cluster)
-and clusterHolds (the same shape, `holds` in the target's config: this cluster only). Versions are
+allowMajor, ignoreHolds, holds ({name: {reason, since, until?}}, registry/holds.cue: every cluster)
+and clusterHolds (the same shape, clusters/<target>/holds.cue: this cluster only). Versions are
 "1.2.3" or "1.2.3@sha256:...".
 
 Considered: the `named` components if any, else every component the target resolves; minus
 `excluded`. A considered component moves to the offered version unless one of these says no:
 
-  hold       the target's config or registry/promotion.cue holds   ignoreHolds overrides
-             the component
+  hold       clusters/<target>/holds.cue or registry/holds.cue   ignoreHolds overrides
+             holds the component
   downgrade  the offered version is older than the pin            nothing: roll back by editing pins.json
   major      the first number changes (18.7 -> 19.0)              named, with allowMajor
   variant    the suffix changes (18.7-system-trixie ->            named

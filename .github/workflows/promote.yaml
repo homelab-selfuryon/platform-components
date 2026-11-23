@@ -3,7 +3,7 @@ name: Promote
 # Moves component versions into a cluster's pins.json through a PR: from registry/latest.json
 # (Renovate keeps it current) or from what another cluster currently runs (alpha-01 -> the next
 # cluster). `cue cmd promote` (ext_tool.cue, scripts/promote.py) applies the promotion policy:
-# holds (registry/promotion.cue, `holds` in the cluster's config), no downgrades, a new major version only for
+# holds (registry/holds.cue, clusters/<c>/holds.cue), no downgrades, a new major version only for
 # named components with allow_major. The PR lists what moves and what was skipped and why; its
 # checks render the cluster, check the whitelists and show the object diff.
 #
