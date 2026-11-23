@@ -1,0 +1,38 @@
+# Negative tests of tenant-images-by-digest, run by scripts/kyverno-check.sh (pod creation only: the
+# CLI has no oldObject, so the unchanged-images exception of updates is not exercised here).
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: foreign-image
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: fail
+spec:
+  containers:
+    - name: app
+      image: docker.io/library/nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: own-image-by-tag
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: fail
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/homelab-selfuryon/notes-api:v0.1.2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: own-image-by-digest
+  namespace: notes-staging
+  annotations:
+    test.homelab-selfuryon.github.io/expect: pass
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/homelab-selfuryon/notes-api@sha256:6109e69376e0e295bcf5544d82cbd816ec58f0aa99109db497e38d381a6d3455
