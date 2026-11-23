@@ -67,6 +67,8 @@ devenv --profile ops shell -- kubectl ...                 # cluster tools (talos
   Field order in latest.json is a Renovate regex contract. Promotion policy (scripts/promote.py):
   holds in `registry/promotion.cue`, `freeze` in a cluster's config, no downgrades (roll back by
   editing pins.json), a new major version only with `components` + `allow_major`.
+- A new cluster also goes into the `to`/`from` options of `.github/workflows/promote.yaml` (the
+  Check workflow fails otherwise); the full list is "Adding a cluster" in README.md.
 - Rendering must stay deterministic: render twice and `diff -r out/<c>` (hidden dirs excluded)
   after changing a chart's values.
 - Releases and `releases.json` are in `gitops`, not here. CI logic is in `github-workflows`;

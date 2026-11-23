@@ -14,14 +14,22 @@ name: Promote
 on:
   workflow_dispatch:
     inputs:
+      # Every cluster in clusters/ (the Check workflow fails when one is missing).
       to:
         description: "Target cluster"
+        type: choice
         required: true
         default: alpha-01
+        options:
+          - alpha-01
       from:
-        description: "Source: 'latest' or a cluster name"
+        description: "Source: latest.json or a cluster"
+        type: choice
         required: true
         default: latest
+        options:
+          - latest
+          - alpha-01
       components:
         description: "Comma-separated components (empty: all the target runs)"
         required: false

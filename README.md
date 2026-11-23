@@ -95,6 +95,19 @@ One signed artifact per cluster, a directory per set: `<set>/components/<name>/{
 Versions come from `registry/latest.json` through `clusters/alpha-01/pins.json`. OCI charts are
 pinned by digest as well (`1.2.3@sha256:...`): Helm verifies the content.
 
+## Adding a cluster
+
+1. `clusters/<c>/cluster.cue` (`defaults.#Platform & {config: {...}}`) and `clusters/<c>/pins.json`:
+   a copy of an existing cluster's pins (a `stable` cluster runs only what is pinned); later
+   versions arrive with `cue cmd promote -t from=<cluster> -t to=<c>`.
+2. Register it in `clusters/clusters.cue` (import and `Clusters: "<c>": ...`).
+3. Add it to the `to` and `from` options of `.github/workflows/promote.yaml`: the Promote
+   workflow offers clusters as a choice, and the Check workflow fails while a cluster in
+   `clusters/` is missing there.
+4. `gitops`: `clusters/<c>/` and its import in `registry.cue` (see its README); the first release
+   from `main` fills `releases.json`.
+5. Bootstrap the cluster: [docs/bootstrap.md](docs/bootstrap.md).
+
 ## What the render guarantees
 
 - **Plain objects, no Helm in the cluster.** `helm template` runs in CI from typed CUE values
