@@ -58,8 +58,8 @@
       "name": "victoria-metrics",
       "datasource": "docker",
       "package": "ghcr.io/victoriametrics/helm-charts/victoria-metrics-single",
-      "version": "0.51.0",
-      "digest": "sha256:f1e54bd4cdb489eb3e7fd31e0993bef1a6cf87877f9dedf0c91238390c18f06a"
+      "version": "0.52.0",
+      "digest": "sha256:fc3bbb40d9e145203f45350103d90d2a776551dc8d37174c1060a4fceab901a2"
     },
     {
       "name": "opencost",
