@@ -67,7 +67,9 @@ devenv --profile ops shell -- kubectl ...                 # cluster tools (talos
   Field order in latest.json is a Renovate regex contract. Promotion policy (scripts/promote.py):
   holds in `registry/holds.cue` (every cluster) and `clusters/<c>/holds.cue` (that one), no
   downgrades (roll back by editing pins.json), a new major version only with `components` +
-  `allow_major`.
+  `allow_major`. A change of latest.json on main promotes to alpha-01 by itself (the push default
+  of `TO` in promote.yaml); promote PRs auto-merge unless the run used `allow_major` or
+  `ignore_holds`.
 - A new cluster also goes into the `to`/`from` options of `.github/workflows/promote.yaml` (the
   Check workflow fails otherwise); the full list is "Adding a cluster" in README.md.
 - Rendering must stay deterministic: render twice and `diff -r out/<c>` (hidden dirs excluded)

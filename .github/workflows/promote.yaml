@@ -7,11 +7,19 @@ name: Promote
 # named components with allow_major. The PR lists what moves and what was skipped and why; its
 # checks render the cluster, check the whitelists and show the object diff.
 #
+# Automatic: a push to main that changes registry/latest.json (a merged Renovate PR) promotes
+# latest.json to AUTO_TO, the cluster that follows it on its own. The PR auto-merges once its
+# checks are green, as does any run without allow_major or ignore_holds: the policy is the gate,
+# the checks are the review. A run with either override waits for a person.
+#
 # A run with no components, exclusions or overrides writes branch promote/<to> (the next such run
 # rebuilds it); any other run gets its own branch, so a targeted PR under review is not overwritten.
 # The PR is opened with an octo-sts token, so its checks start as usual.
 
 on:
+  push:
+    branches: [main]
+    paths: [registry/latest.json]
   workflow_dispatch:
     inputs:
       # Every cluster in clusters/ (the Check workflow fails when one is missing).
@@ -49,6 +57,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
 env:
   GOGC: "200"
   NIXPKGS_REV: f9a75f41be3a74eab55d3a7679d34ad6cc0da977
@@ -60,6 +72,14 @@ jobs:
     permissions:
       contents: read
       id-token: write # octo-sts (policy: .github/chainguard/promote.sts.yaml)
+    env:
+      # A push has no inputs: latest.json to the cluster that follows it on its own.
+      TO: ${{ inputs.to || 'alpha-01' }}
+      FROM: ${{ inputs.from || 'latest' }}
+      COMPONENTS: ${{ inputs.components }}
+      EXCLUDE: ${{ inputs.exclude }}
+      ALLOW_MAJOR: ${{ inputs.allow_major == true }}
+      IGNORE_HOLDS: ${{ inputs.ignore_holds == true }}
     steps:
       - name: Validate inputs
         id: scope
@@ -74,13 +94,10 @@ jobs:
           else
             echo "branch=promote/${TO}-${RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           fi
+          if [[ "$ALLOW_MAJOR" != true && "$IGNORE_HOLDS" != true ]]; then
+            echo "automerge=true" >> "$GITHUB_OUTPUT"
+          fi
         env:
-          TO: ${{ inputs.to }}
-          FROM: ${{ inputs.from }}
-          COMPONENTS: ${{ inputs.components }}
-          EXCLUDE: ${{ inputs.exclude }}
-          ALLOW_MAJOR: ${{ inputs.allow_major }}
-          IGNORE_HOLDS: ${{ inputs.ignore_holds }}
           RUN_NUMBER: ${{ github.run_number }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -95,13 +112,6 @@ jobs:
           devenv shell -- cue cmd promote -t to="$TO" -t from="$FROM" -t components="$COMPONENTS" -t exclude="$EXCLUDE" \
             -t allow_major="$ALLOW_MAJOR" -t ignore_holds="$IGNORE_HOLDS" -t body="$RUNNER_TEMP/body.md"
           cat "$RUNNER_TEMP/body.md" >> "$GITHUB_STEP_SUMMARY"
-        env:
-          TO: ${{ inputs.to }}
-          FROM: ${{ inputs.from }}
-          COMPONENTS: ${{ inputs.components }}
-          EXCLUDE: ${{ inputs.exclude }}
-          ALLOW_MAJOR: ${{ inputs.allow_major }}
-          IGNORE_HOLDS: ${{ inputs.ignore_holds }}
 
       - name: Token for this repository
         id: octo-sts
@@ -111,12 +121,23 @@ jobs:
           identity: promote
 
       - uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+        id: cpr
         with:
           token: ${{ steps.octo-sts.outputs.token }}
           branch: ${{ steps.scope.outputs.branch }}
           sign-commits: true
           delete-branch: true
-          add-paths: clusters/${{ inputs.to }}/pins.json
-          title: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
-          commit-message: "chore(${{ inputs.to }}): promote components from ${{ inputs.from }}"
+          add-paths: clusters/${{ env.TO }}/pins.json
+          title: "chore(${{ env.TO }}): promote components from ${{ env.FROM }}"
+          commit-message: "chore(${{ env.TO }}): promote components from ${{ env.FROM }}"
           body-path: ${{ runner.temp }}/body.md
+
+      # Queued, not merged on the spot: the ruleset requires final-check, so the PR merges (squash)
+      # once its checks are green.
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number != '' && steps.scope.outputs.automerge == 'true'
+        run: gh pr merge --auto --squash "$PR"
+        env:
+          GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
