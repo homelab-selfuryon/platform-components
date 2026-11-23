@@ -63,7 +63,8 @@ import (
 	}
 }
 
-// The Flux Kustomization that applies a component's directory of the set artifact.
+// The Flux Kustomization that applies a component's directory of the cluster artifact: one
+// artifact holds every set (OCIRepository `platform-components`, from gitops), a directory each.
 #Kustomization: {
 	#c: schema.#Component
 
@@ -86,12 +87,12 @@ import (
 			interval:      "1h"
 			retryInterval: "2m"
 			timeout:       "10m"
-			path:          "./components/\(#c.name)"
+			path:          "./\(#c.set)/components/\(#c.name)"
 			prune:         true
 			wait:          true
 			sourceRef: {
 				kind: "OCIRepository"
-				name: "set-\(#c.set)"
+				name: "platform-components"
 			}
 			serviceAccountName: _sa
 			if #c.namespace != _|_ if #c.targetNamespace if #c.variant == "render" {

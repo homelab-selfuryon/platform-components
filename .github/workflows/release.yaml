@@ -1,11 +1,11 @@
 name: Release
 
-# Pushes to main: publish one signed artifact per set and cluster
-# (ghcr.io/homelab-selfuryon/platform-components/<cluster>-<set>) and open the PR to gitops that moves
-# the digests (octo-sts identity `components-release`, no auto-merge: platform approves).
+# Pushes to main: publish one signed artifact per cluster, a directory per set
+# (ghcr.io/homelab-selfuryon/platform-components/<cluster>) and open the PR to gitops that moves
+# its digest (octo-sts identity `components-release`, no auto-merge: platform approves).
 #
-# Set content hash: sha256 of the sorted, uncompressed tar of out/<cluster>/<set>/, first 16 hex
-# characters; a set whose tag exists is not pushed again.
+# Content hash: sha256 of the sorted, uncompressed tar of the set directories in out/<cluster>/, first 16 hex
+# characters; a tag that exists is not pushed again.
 #
 # The signing job is defined in THIS file, not in a reusable workflow: the certificate subject is
 # https://github.com/homelab-selfuryon/platform-components/.github/workflows/release.yaml@refs/heads/main,
@@ -59,7 +59,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
-      packages: write # push the set artifacts
+      packages: write # push the cluster artifact
       id-token: write # keyless cosign, octo-sts
     strategy:
       matrix:
@@ -99,34 +99,32 @@ jobs:
         env:
           CLUSTER: ${{ matrix.cluster }}
 
-      - name: Push and sign the changed sets
+      - name: Push and sign the cluster artifact
         run: |
           set -euo pipefail
-          releases="$RUNNER_TEMP/releases.json"
-          echo '{}' > "$releases"
-          for dir in "out/${CLUSTER}"/*/; do
-            set_name=$(basename "$dir")
-            [[ "$set_name" =~ ^[a-z][a-z0-9-]{1,40}$ ]]
-            repo="${REGISTRY}/platform-components/${CLUSTER}-${set_name}"
-            tar_args=(--sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -C "out/${CLUSTER}/${set_name}" -cf - .)
-            hash=$(tar "${tar_args[@]}" | sha256sum | cut -c1-16)
-            if digest=$(oras resolve "${repo}:${hash}" 2>/dev/null); then
-              echo "${set_name}: ${hash} exists, not pushed again"
-            else
-              tar "${tar_args[@]}" | gzip -n > "$RUNNER_TEMP/${set_name}.tar.gz"
-              (cd "$RUNNER_TEMP" && oras push "${repo}:${hash}" \
-                --artifact-type application/vnd.homelab-selfuryon.components.v1 \
-                --format json \
-                "${set_name}.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip") > "$RUNNER_TEMP/push.json"
-              digest=$(jq -r .digest "$RUNNER_TEMP/push.json")
-              [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-              cosign sign --yes "${repo}@${digest}"
-              echo "${set_name}: pushed ${hash}"
-            fi
-            jq --arg s "$set_name" --arg v "$hash" --arg d "$digest" '.[$s] = {version: $v, digest: $d}' \
-              "$releases" > "$releases.new" && mv "$releases.new" "$releases"
+          # The set directories only (not bootstrap.yaml, not the scratch dirs).
+          mapfile -t sets < <(devenv shell -- cue cmd clusters | jq -r --arg c "$CLUSTER" '.[] | select(.name == $c) | .sets[]')
+          [[ ${#sets[@]} -gt 0 ]]
+          for s in "${sets[@]}"; do
+            [[ "$s" =~ ^[a-z][a-z0-9-]{1,40}$ && -d "out/${CLUSTER}/${s}" ]]
           done
-          jq -S . "$releases" > "$RUNNER_TEMP/releases.sorted.json"
+          repo="${REGISTRY}/platform-components/${CLUSTER}"
+          tar_args=(--sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -C "out/${CLUSTER}" -cf - "${sets[@]}")
+          hash=$(tar "${tar_args[@]}" | sha256sum | cut -c1-16)
+          if digest=$(oras resolve "${repo}:${hash}" 2>/dev/null); then
+            echo "${hash} exists, not pushed again"
+          else
+            tar "${tar_args[@]}" | gzip -n > "$RUNNER_TEMP/${CLUSTER}.tar.gz"
+            (cd "$RUNNER_TEMP" && oras push "${repo}:${hash}" \
+              --artifact-type application/vnd.homelab-selfuryon.components.v1 \
+              --format json \
+              "${CLUSTER}.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip") > "$RUNNER_TEMP/push.json"
+            digest=$(jq -r .digest "$RUNNER_TEMP/push.json")
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            cosign sign --yes "${repo}@${digest}"
+            echo "pushed ${hash}"
+          fi
+          jq -n --arg v "$hash" --arg d "$digest" '{version: $v, digest: $d}' > "$RUNNER_TEMP/release.json"
         env:
           CLUSTER: ${{ matrix.cluster }}
 
@@ -149,12 +147,10 @@ jobs:
           set -euo pipefail
           file="gitops/clusters/${CLUSTER}/releases.json"
           [[ -f "$file" ]] || { echo "::error::cluster ${CLUSTER} is not registered in gitops"; exit 1; }
-          # Keep the key order of the existing file so the PR diff shows only changed sets.
-          jq --slurpfile new "$RUNNER_TEMP/releases.sorted.json" '. as $old | reduce ($new[0] | keys_unsorted[]) as $k ($old; .[$k] = $new[0][$k])' "$file" > "$file.new"
-          mv "$file.new" "$file"
+          cp "$RUNNER_TEMP/release.json" "$file"
           echo "BODY_FILE=$RUNNER_TEMP/pr-body.md" >> "$GITHUB_ENV"
           {
-            echo "Platform sets of \`${CLUSTER}\` built from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}."
+            echo "Platform of \`${CLUSTER}\` built from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}."
             echo
             echo '```json'
             cat "$file"
@@ -174,8 +170,8 @@ jobs:
           sign-commits: true
           delete-branch: true
           add-paths: clusters/${{ matrix.cluster }}/releases.json
-          title: "release(${{ matrix.cluster }}): platform sets"
-          commit-message: "release(${{ matrix.cluster }}): platform sets"
+          title: "release(${{ matrix.cluster }}): platform"
+          commit-message: "release(${{ matrix.cluster }}): platform"
           body-path: ${{ env.BODY_FILE }}
 
   final-check:

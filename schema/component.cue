@@ -97,7 +97,7 @@ Net: {
 	// Home namespace (target namespace of the Kustomization). None for components that only
 	// own cluster-scoped objects or several namespaces.
 	namespace?: string
-	// The set (one signed artifact per set and cluster) the component is released in.
+	// The set the component is released in (a directory of the cluster artifact, applied in order).
 	set: *"system" | string
 
 	// Short description for humans (CLAUDE/README listings, comments in the render).
