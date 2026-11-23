@@ -101,7 +101,7 @@
       "datasource": "docker",
       "package": "ghcr.io/cloudnative-pg/postgresql",
       "version": "19.0-system-trixie",
-      "digest": "sha256:789b58fff514c28a42844962951c0556cedecaa8d3f35678bc86162fddad9f18"
+      "digest": "sha256:04aba475dfd2ee7ad4a8ad22e77a3b5597cba7f48437ba014e9730e87d00ae4b"
     },
     {
       "name": "secrets-store-csi-driver",
