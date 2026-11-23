@@ -56,6 +56,9 @@ import (
 		#pins:    _pins
 	}).versions
 
+	// A hold names a component the cluster runs: a typo would hold nothing.
+	config: holds: [string]~(N,_): {_known: true & resolved[N] != _|_}
+
 	components: schema.#Components
 
 	rendered: render.#Cluster & {

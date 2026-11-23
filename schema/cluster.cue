@@ -17,10 +17,9 @@ import "time"
 	// Version channel, see registry.#Resolve.
 	channel: *"fast" | "stable"
 
-	// Promotion freeze: `cue cmd promote` moves no pin of this cluster while it is set (and `until`, if
-	// given, has not passed); `-t ignore_holds=true` overrides. Releases are unaffected: they publish
-	// what is pinned.
-	freeze?: #Hold
+	// Promotion holds on this cluster only, keyed by component: written in clusters/<c>/holds.cue
+	// (registry/holds.cue holds on every cluster). Releases are unaffected: they publish what is pinned.
+	holds: [string]: #Hold
 
 	// Base domain of the platform: Gateway hostnames, external-dns records, certificates.
 	domain!: string
@@ -85,7 +84,7 @@ import "time"
 	}
 }
 
-// Why something must not move, and since when (promotion policy: cluster freeze, component holds).
+// Why a component must not move, and since when (promotion holds: registry/holds.cue, clusters/<c>/holds.cue).
 #Hold: {
 	reason!: string
 	since!:  time.Format("2006-01-02")
