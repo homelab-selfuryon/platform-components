@@ -31,7 +31,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          sparse-checkout: clusters
+          sparse-checkout: |
+            clusters
+            .github/workflows
       # Temporarily the directory listing, not `cue cmd clusters`: a `cue cmd` evaluates far more than
       # the command needs and took ~45 s with the devenv around it. Go back to `cue cmd clusters` (the
       # registry in clusters/clusters.cue is the source of truth) once a CUE release has the fix for
@@ -43,6 +45,21 @@ jobs:
           clusters=$(find clusters -mindepth 2 -maxdepth 2 -name cluster.cue -printf '%h\n' | xargs -r -n1 basename | sort | jq -R . | jq -cs .)
           jq -e 'all(.[]; test("^[a-z][a-z0-9-]{1,40}$"))' <<<"$clusters" > /dev/null
           echo "clusters=${clusters}" >> "$GITHUB_OUTPUT"
+
+      # The Promote workflow offers clusters as a choice: every cluster must be in both lists.
+      - name: Promote lists every cluster
+        run: |
+          set -euo pipefail
+          f=.github/workflows/promote.yaml
+          want=$(jq -c sort <<<"$CLUSTERS")
+          to=$(yq -o=json '.on.workflow_dispatch.inputs.to.options' "$f" | jq -c sort)
+          from=$(yq -o=json '.on.workflow_dispatch.inputs.from.options' "$f" | jq -c 'map(select(. != "latest")) | sort')
+          [[ "$to" == "$want" && "$from" == "$want" ]] || {
+            echo "::error file=$f::inputs to/from must list exactly the clusters in clusters/: $want (to: $to, from: $from)"
+            exit 1
+          }
+        env:
+          CLUSTERS: ${{ steps.list.outputs.clusters }}
 
   check:
     needs: prepare
@@ -80,6 +97,10 @@ jobs:
         run: |
           nix profile install --accept-flake-config --profile "$RUNNER_TEMP/devenv" "github:cachix/devenv/${DEVENV_VERSION}#devenv"
           echo "$RUNNER_TEMP/devenv/bin" >> "$GITHUB_PATH"
+
+      - name: Unit tests
+        working-directory: head
+        run: devenv shell -- python3 -m unittest discover -s scripts -p "test_*.py"
 
       - name: Render and check
         working-directory: head

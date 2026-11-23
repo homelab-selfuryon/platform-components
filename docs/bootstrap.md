@@ -142,8 +142,10 @@ kubectl get ns -l homelab-selfuryon.github.io/team
 - Component or policy change: PR here; its checks render every cluster, check the whitelists and
   show the object diff; merge releases the changed sets and opens the PR in `gitops`.
 - New versions: Renovate edits `registry/latest.json`; the Promote workflow (or
-  `cue cmd promote -t to=alpha-01`) copies them into `clusters/alpha-01/pins.json`. Promote to the
-  next cluster with `-t from=alpha-01 -t to=<next>`.
+  `cue cmd promote -t to=alpha-01`) copies them into `clusters/alpha-01/pins.json`, skipping
+  held components, a frozen cluster, downgrades and new major versions (the PR lists what it
+  skipped and why; `registry/promotion.cue`). Promote to the next cluster with
+  `-t from=alpha-01 -t to=<next>`.
 - Onboarding a team: a file in `teams/` ([teams.md](teams.md)).
 - Rollback: revert the PR in `gitops` that moved the digest.
 

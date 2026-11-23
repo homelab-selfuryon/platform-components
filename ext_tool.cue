@@ -181,73 +181,70 @@ command: check: {
 	}
 }
 
-// cue cmd promote -t to=<cluster> [-t from=<latest|cluster>] [-t components=a,b]
+// cue cmd promote -t to=<cluster> [-t from=<latest|cluster>] [-t components=a,b] [-t exclude=a,b]
+//                 [-t allow_major=true] [-t ignore_holds=true] [-t body=<file>]
 //
-// Copies component versions into clusters/<to>/pins.json, from latest.json or from the versions
-// another cluster currently resolves. Without `components` it touches every component the target
-// resolves; an explicit list may also add pins the target does not have yet (a new component on
-// the stable channel). Digests travel with the version ("1.2.3@sha256:...").
-to:         *null | string     @tag(to)
-from:       *"latest" | string @tag(from)
-components: *"" | string       @tag(components)
+// Moves component versions into clusters/<to>/pins.json, from latest.json or from the versions
+// another cluster currently resolves, under the promotion policy: holds (registry/promotion.cue),
+// the target's freeze, no downgrades, a new major only for named components with allow_major.
+// scripts/promote.py decides and writes; its docstring has the rules. Without `components` it
+// considers every component the target resolves; a named one may also be added to the pins (a new
+// component on the stable channel). Digests travel with the version ("1.2.3@sha256:...").
+// `body` writes the pull request description: what moves and what was skipped, and why.
+to:           *null | string     @tag(to)
+from:         *"latest" | string @tag(from)
+components:   *"" | string       @tag(components)
+exclude:      *"" | string       @tag(exclude)
+allow_major:  *false | bool      @tag(allow_major,type=bool)
+ignore_holds: *false | bool      @tag(ignore_holds,type=bool)
+body:         *"" | string       @tag(body)
+
+let _to = to
+let _from = from
+let _named = [for s in strings.Split(components, ",") if s != "" {s}]
+let _excluded = [for s in strings.Split(exclude, ",") if s != "" {s}]
+let _allowMajor = allow_major
+let _ignoreHolds = ignore_holds
 
 _promote: {
 	_source: registry.#Versions
-	if from == "latest" {
+	if _from == "latest" {
 		_source: registry.latest
 	}
-	if from != "latest" {
-		_source: all_clusters.Clusters[from].resolved
+	if _from != "latest" {
+		_source: all_clusters.Clusters[_from].resolved
 	}
+	_target: all_clusters.Clusters[_to]
 
-	_target:  all_clusters.Clusters[to]
-	_current: _target.#pins
-	_only:    [for s in strings.Split(components, ",") if s != "" {s}]
-	_names: [
-		if len(_only) > 0 for n in _only {n},
-		if len(_only) == 0 for n, _ in _target.resolved {n},
-	]
-
-	updates: {
-		for n in _names if _source[n] != _|_ {
-			if _current[n] == _|_ {(n): _source[n]}
-			if _current[n] != _|_ if _current[n] != _source[n] {(n): _source[n]}
+	// The input of scripts/promote.py.
+	input: {
+		target:      _to
+		source:      _from
+		offered:     _source
+		pins:        _target.#pins
+		resolved:    [for n, _ in _target.resolved {n}]
+		named:       _named
+		excluded:    _excluded
+		allowMajor:  _allowMajor
+		ignoreHolds: _ignoreHolds
+		holds:       registry.holds
+		if _target.config.freeze != _|_ {
+			freeze: _target.config.freeze
 		}
 	}
-	// Ordered (name, version) pairs: existing pins keep their place, new ones are appended.
-	// Rendered by hand because struct field order is not stable.
-	_pairs: list.Concat([[
-		for n, v in _current {
-			if updates[n] != _|_ {[n, updates[n]]}
-			if updates[n] == _|_ {[n, v]}
-		},
-	], [
-		for n, v in updates if _current[n] == _|_ {[n, v]},
-	]])
-	contents: "{\n" + strings.Join([for p in _pairs {"  \"\(p[0])\": \"\(p[1])\""}], ",\n") + "\n}\n"
-	summary: strings.Join([
-		for n, v in updates {
-			if _current[n] != _|_ {"\(n): \(_current[n]) -> \(v)"}
-			if _current[n] == _|_ {"\(n): (unpinned) -> \(v)"}
-		},
-	], "\n")
 }
 
 command: promote: {
 	if to == null {
-		usage: cli.Print & {text: "usage: cue cmd promote -t to=<cluster> [-t from=<latest|cluster>] [-t components=a,b]"}
+		usage: cli.Print & {text: "usage: cue cmd promote -t to=<cluster> [-t from=<latest|cluster>] [-t components=a,b] [-t exclude=a,b] [-t allow_major=true] [-t ignore_holds=true] [-t body=<file>]"}
 	}
 	if to != null {
-		write: file.Create & {
-			filename: "clusters/\(to)/pins.json"
-			contents: _promote.contents
-		}
-		report: cli.Print & {
-			$after: write
-			text: [
-				if len(_promote.updates) == 0 {"\(to): nothing to promote from \(from)"},
-				"\(to) <- \(from):\n\(_promote.summary)",
-			][0]
+		run: exec.Run & {
+			cmd: list.Concat([
+				["python3", "-I", "scripts/promote.py", "--pins", "clusters/\(to)/pins.json", "--latest", "registry/latest.json"],
+				[if body != "" {"--body"}, if body != "" {body}],
+			])
+			stdin: json.Marshal(_promote.input)
 		}
 	}
 }

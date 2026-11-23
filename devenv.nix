@@ -46,7 +46,10 @@ in
     };
   };
 
-  treefmt.config.programs.shfmt.enable = true;
+  treefmt.config.programs.shfmt = {
+    enable = true;
+    indent_size = 2; # the scripts use two spaces; unset, shfmt falls back to tabs
+  };
 
   scripts.vet.exec = "bash scripts/cue-vet.bash";
 

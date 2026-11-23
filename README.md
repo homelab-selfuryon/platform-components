@@ -74,7 +74,7 @@ cue cmd clusters                              # JSON: clusters, publish flag, se
 cue cmd render  -t cluster=alpha-01           # out/<c>/<set>/{flux,components/<name>}/  (needs network: helm pulls charts)
 cue cmd check   -t cluster=alpha-01           # every cluster-scoped object of the render must match its component's whitelist
 cue cmd bootstrap -t cluster=alpha-01         # out/<c>/bootstrap.yaml, applied by hand once (docs/bootstrap.md)
-cue cmd promote -t to=alpha-01 [-t from=latest|<cluster>] [-t components=a,b]    # clusters/<to>/pins.json
+cue cmd promote -t to=alpha-01 [-t from=latest|<cluster>] [-t components=a,b]    # clusters/<to>/pins.json, under registry/promotion.cue
 bash scripts/cue-vet.bash                     # cue fmt --check and vet of every package
 bash scripts/kyverno-check.sh alpha-01        # the rendered policies over the render; userInfo policies per component SA
 ```
@@ -94,6 +94,19 @@ One signed artifact per cluster, a directory per set: `<set>/components/<name>/{
 
 Versions come from `registry/latest.json` through `clusters/alpha-01/pins.json`. OCI charts are
 pinned by digest as well (`1.2.3@sha256:...`): Helm verifies the content.
+
+## Adding a cluster
+
+1. `clusters/<c>/cluster.cue` (`defaults.#Platform & {config: {...}}`) and `clusters/<c>/pins.json`:
+   a copy of an existing cluster's pins (a `stable` cluster runs only what is pinned); later
+   versions arrive with `cue cmd promote -t from=<cluster> -t to=<c>`.
+2. Register it in `clusters/clusters.cue` (import and `Clusters: "<c>": ...`).
+3. Add it to the `to` and `from` options of `.github/workflows/promote.yaml`: the Promote
+   workflow offers clusters as a choice, and the Check workflow fails while a cluster in
+   `clusters/` is missing there.
+4. `gitops`: `clusters/<c>/` and its import in `registry.cue` (see its README); the first release
+   from `main` fills `releases.json`.
+5. Bootstrap the cluster: [docs/bootstrap.md](docs/bootstrap.md).
 
 ## What the render guarantees
 
