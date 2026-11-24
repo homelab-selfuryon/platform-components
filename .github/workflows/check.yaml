@@ -37,7 +37,7 @@ jobs:
       # Temporarily the directory listing, not `cue cmd clusters`: a `cue cmd` evaluates far more than
       # the command needs and took ~45 s with the devenv around it. Go back to `cue cmd clusters` (the
       # registry in clusters/clusters.cue is the source of truth) once a CUE release has the fix for
-      # cue-lang/cue#4242 (on master, not in v0.18.0-rc.4) and ideally cue-lang/cue#4566.
+      # cue-lang/cue#4242 (on master for v0.19, not in v0.18.0) and ideally cue-lang/cue#4566.
       - name: List clusters
         id: list
         run: |
