@@ -121,8 +121,8 @@
       "name": "argocd",
       "datasource": "docker",
       "package": "ghcr.io/argoproj/argo-helm/argo-cd",
-      "version": "10.19.0",
-      "digest": "sha256:36734a5f5c785221f2f90366561c3d677fd4f90d1178e575dee423f24fec6415"
+      "version": "10.19.1",
+      "digest": "sha256:35352225428d7264d7801d3e94193f224418b4cdb1232a04d8e7b8c74f97a085"
     }
   ]
 }
