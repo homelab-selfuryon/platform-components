@@ -5,9 +5,9 @@ description: CUE language expert for platform-components — language v0.18.0, p
 
 # CUE Expert Mode
 
-The module is at **language version v0.18.0** (`cue.mod/module.cue`), evaluated with the CUE
-pre-release `devenv.nix` installs from the upstream tarball (v0.18.0-rc.4 until v0.18.0 reaches
-nixpkgs; then the override goes). At v0.18.0 postfix aliases (`~(K,V)`, `self`) and strict embedding
+The module is at **language version v0.18.0** (`cue.mod/module.cue`), evaluated with CUE
+v0.18.0, the upstream release binary that platform-kit's devenv module installs
+(`platformKit.cue.version`) until nixpkgs ships v0.18. At v0.18.0 postfix aliases (`~(K,V)`, `self`) and strict embedding
 (`X...`) are plain language: no experiment attribute is needed or wanted.
 
 ## CUE experiments
@@ -22,7 +22,7 @@ No attribute by default. Add `@experiment(try)` (before `package`, after `@exter
 file that uses `try`, `?` selectors, or `else`/`otherwise` on comprehensions — they fail without
 it. Never add `aliasv2`/`explicitopen` (stable, no-ops). Generated CRDs under `crd/` carry no attribute.
 
-### Status of every experiment (CUE v0.18.0-rc.4)
+### Status of every experiment (CUE v0.18.0)
 
 Source of truth: `cue help experiments`, or `internal/cueexperiment/{file,exp}.go` in
 the CUE repo. A **per-file** experiment is enabled with `@experiment(name)` and tracks
@@ -40,12 +40,12 @@ is on by default) and tracks the binary's version.
 | `functions` — `func(...) -> T: body` literals, types, calls                              | v0.18   | —      | not used (preview)             |
 | `openlists` — lists open like structs, `#[...]` / `#{...}` closed literals               | v0.18   | —      | do not adopt                   |
 
-| global (`CUE_EXPERIMENT`)                                                                                     | preview | default | stable      | note                                                      |
-| ------------------------------------------------------------------------------------------------------------- | ------- | ------- | ----------- | --------------------------------------------------------- |
-| `formatv2` — rewritten `cue fmt`                                                                              | v0.18   | v0.18   | —           | alignment differs from older `cue fmt`                    |
-| `yamlgoccy` — goccy-based YAML encoder/decoder                                                                | v0.18   | v0.18   | —           | writes non-BMP characters raw, quotes `0X1F`-like strings |
-| `openapiv2` — whole-document OpenAPI import/export                                                            | v0.18   | —       | —           | not used                                                  |
-| `modules`, `yamlv3decoder`, `decodeint64`, `embed`, `toposort`, `evalv3`, `keepvalidators`, `cmdreferencepkg` | ≤ v0.13 |         | v0.11–v0.16 | stable, cannot be turned off                              |
+| global (`CUE_EXPERIMENT`)                                                                                     | preview | default | stable      | note                                             |
+| ------------------------------------------------------------------------------------------------------------- | ------- | ------- | ----------- | ------------------------------------------------ |
+| `formatv2` — rewritten `cue fmt`                                                                              | v0.18   | v0.18   | —           | alignment differs from older `cue fmt`           |
+| `yamlgoccy` — goccy-based YAML encoder/decoder                                                                | v0.18   | —       | —           | off by default since v0.18.0 (was on in the rcs) |
+| `openapiv2` — whole-document OpenAPI import/export                                                            | v0.18   | —       | —           | not used                                         |
+| `modules`, `yamlv3decoder`, `decodeint64`, `embed`, `toposort`, `evalv3`, `keepvalidators`, `cmdreferencepkg` | ≤ v0.13 |         | v0.11–v0.16 | stable, cannot be turned off                     |
 
 `@extern(embed)` (file embedding, `_x: _ @embed(file="x.json")`) is still a per-file
 attribute and stays where JSON is embedded.
