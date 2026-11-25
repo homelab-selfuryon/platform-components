@@ -27,7 +27,9 @@ import (
 	// ghcr.io/cloudnative-pg/postgresql, `<major>.<minor>-<flavour>`, one per major the catalog
 	// offers; the first is the newest (the operator's default). A second major is there only while
 	// the apps move to the first (platform-kit `#Cluster.postgresMajor`): CNPG upgrades a Cluster in
-	// place when its catalog major changes, and needs the old image for that.
+	// place when its catalog major changes, and needs the old image for that. Such an entry also
+	// gets a packageRule in .github/renovate.json that keeps it on its major (`allowedVersions`);
+	// both go once every Cluster runs the new major.
 	#postgresRefs: [schema.#Ref & {digest!: _}, ...schema.#Ref & {digest!: _}]
 
 	let _operator = "ghcr.io/cloudnative-pg/cloudnative-pg:\(#operatorRef.version)@\(#operatorRef.digest)"
