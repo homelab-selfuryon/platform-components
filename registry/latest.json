@@ -65,8 +65,8 @@
       "name": "opencost",
       "datasource": "docker",
       "package": "ghcr.io/opencost/charts/opencost",
-      "version": "2.5.34",
-      "digest": "sha256:03198937c17d9ca8bddbb95367d030265d906090e124298696c7ca9889824ec0"
+      "version": "2.5.35",
+      "digest": "sha256:8e5c35ad452e39a47b181c9ec4bf8b2e09f0396e4daea78238678bd8853cb070"
     },
     {
       "name": "envoy-gateway",
