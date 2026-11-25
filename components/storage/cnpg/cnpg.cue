@@ -1,6 +1,7 @@
 package cnpg
 
 import (
+	"list"
 	"strconv"
 	"strings"
 
@@ -12,7 +13,7 @@ import (
 // comes from platform-kit, their images from here.
 //
 // Images: the operator image and the PostgreSQL images are pinned by digest (registry/latest.json,
-// entries `cnpg-operator` and `postgresql`). The operator starts both in tenant namespaces (the
+// entries `cnpg-operator`, `postgresql` and, during a major upgrade, `postgresql-<old major>`). The operator starts both in tenant namespaces (the
 // operator image as the instance pods' bootstrap init container): they are this component's
 // `tenantImages`, the only foreign images the tenant image policy allows. Tenant Clusters must take
 // PostgreSQL from the ClusterImageCatalog below, never an `imageName` of their own.
@@ -23,12 +24,21 @@ import (
 	// ghcr.io/cloudnative-pg/cloudnative-pg; its version must be the chart's appVersion.
 	#operatorRef: schema.#Ref & {digest!: _}
 
-	// ghcr.io/cloudnative-pg/postgresql, `<major>.<minor>-<flavour>`.
-	#postgresRef: schema.#Ref & {digest!: _}
+	// ghcr.io/cloudnative-pg/postgresql, `<major>.<minor>-<flavour>`, one per major the catalog
+	// offers; the first is the newest (the operator's default). A second major is there only while
+	// the apps move to the first (platform-kit `#Cluster.postgresMajor`): CNPG upgrades a Cluster in
+	// place when its catalog major changes, and needs the old image for that.
+	#postgresRefs: [schema.#Ref & {digest!: _}, ...schema.#Ref & {digest!: _}]
 
 	let _operator = "ghcr.io/cloudnative-pg/cloudnative-pg:\(#operatorRef.version)@\(#operatorRef.digest)"
-	let _postgres = "ghcr.io/cloudnative-pg/postgresql:\(#postgresRef.version)@\(#postgresRef.digest)"
-	let _major = strings.Split(#postgresRef.version, ".")[0]
+	let _images = [for r in #postgresRefs {
+		major: strconv.Atoi(strings.Split(r.version, ".")[0])
+		image: "ghcr.io/cloudnative-pg/postgresql:\(r.version)@\(r.digest)"
+	}]
+	let _postgres = _images[0].image
+
+	// A catalog holds one image per major.
+	_uniqueMajors: true & list.UniqueItems([for i in _images {i.major}])
 
 	component: schema.#Component & {
 		name:        "cnpg"
@@ -58,12 +68,9 @@ import (
 			monitoring: podMonitorEnabled: false
 		}
 
-		manifests: global: clusterImageCatalog: (schema.#PostgresImageCatalog): spec: images: [{
-			major: strconv.Atoi(_major)
-			image: _postgres
-		}]
+		manifests: global: clusterImageCatalog: (schema.#PostgresImageCatalog): spec: images: _images
 
-		tenantImages: [_operator, _postgres]
+		tenantImages: [_operator, for i in _images {i.image}]
 
 		network: {
 			ingress: [

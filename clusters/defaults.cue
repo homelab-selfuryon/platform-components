@@ -89,13 +89,20 @@ import (
 		"internal-ca":   (app_internalca.#InternalCA & {#cluster: config}).component
 		"host-firewall": (app_hostfirewall.#HostFirewall & {#cluster: config}).component
 
-		"local-path-provisioner":   (app_localpath.#LocalPath & {#cluster: config, #ref: versions["local-path-provisioner"]}).component
-		"metrics-server":           (app_metricsserver.#MetricsServer & {#cluster: config, #ref: versions["metrics-server"]}).component
-		"victoria-metrics":         (app_victoriametrics.#VictoriaMetrics & {#cluster: config, #ref: versions["victoria-metrics"]}).component
-		opencost:                   (app_opencost.#OpenCost & {#cluster: config, #ref: versions.opencost}).component
-		"envoy-gateway":            (app_envoygateway.#EnvoyGateway & {#cluster: config, #ref: versions["envoy-gateway"]}).component
-		"external-dns":             (app_externaldns.#ExternalDNS & {#cluster: config, #ref: versions["external-dns"]}).component
-		cnpg:                       (app_cnpg.#CNPG & {#cluster: config, #ref: versions.cnpg, #operatorRef: versions["cnpg-operator"], #postgresRef: versions.postgresql}).component
+		"local-path-provisioner": (app_localpath.#LocalPath & {#cluster: config, #ref: versions["local-path-provisioner"]}).component
+		"metrics-server":         (app_metricsserver.#MetricsServer & {#cluster: config, #ref: versions["metrics-server"]}).component
+		"victoria-metrics":       (app_victoriametrics.#VictoriaMetrics & {#cluster: config, #ref: versions["victoria-metrics"]}).component
+		opencost:                 (app_opencost.#OpenCost & {#cluster: config, #ref: versions.opencost}).component
+		"envoy-gateway":          (app_envoygateway.#EnvoyGateway & {#cluster: config, #ref: versions["envoy-gateway"]}).component
+		"external-dns":           (app_externaldns.#ExternalDNS & {#cluster: config, #ref: versions["external-dns"]}).component
+		cnpg: (app_cnpg.#CNPG & {
+			#cluster:     config
+			#ref:         versions.cnpg
+			#operatorRef: versions["cnpg-operator"]
+
+			// `postgresql` (the newest major), then `postgresql-<major>` pins kept during a major upgrade.
+			#postgresRefs: [versions.postgresql, for n, r in versions if n =~ "^postgresql-[0-9]+$" {r}]
+		}).component
 		"secrets-store-csi-driver": (app_csidriver.#CSIDriver & {#cluster: config, #ref: versions["secrets-store-csi-driver"]}).component
 		openbao:                    (app_openbao.#OpenBao & {#cluster: config, #ref: versions.openbao}).component
 		"openbao-csi-provider":     (app_openbaocsi.#OpenBaoCSI & {#cluster: config, #ref: versions.openbao}).component

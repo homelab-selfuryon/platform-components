@@ -27,6 +27,12 @@
         "ghcr.io/cloudnative-pg/cloudnative-pg"
       ],
       "groupName": "cloudnative-pg"
+    },
+    {
+      "description": "A `postgresql-<major>` entry keeps the previous PostgreSQL major in the image catalog during an upgrade: it takes that major's minor and digest updates only.",
+      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+      "matchCurrentVersion": "/^18\\./",
+      "allowedVersions": "/^18\\./"
     }
   ]
 }
