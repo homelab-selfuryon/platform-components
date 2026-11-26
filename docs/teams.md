@@ -1,22 +1,10 @@
 # Onboarding a team
 
-A file `teams/<name>.cue` is the whole onboarding:
-
-```cue
-package teams
-
-Teams: notes: {
-	quota: {
-		staging: {requestsCPU: "2", requestsMemory: "2Gi", limitsMemory: "4Gi", pods: "20"}
-		prod:    {requestsCPU: "4", requestsMemory: "4Gi", limitsMemory: "8Gi", pods: "30"}
-		preview: {requestsCPU: "500m", requestsMemory: "512Mi", limitsMemory: "1Gi", pods: "8"}
-	}
-}
-```
-
-It renders a component `team-<name>` in the `tenants` set. The matching GitHub team and the
-repositories are created in `platform-terraform/github`; the apps register in `gitops`
-(`apps/<team>/<app>/app.cue`).
+A team is onboarded in the `catalog` repository (`teams/<team>/team.cue`: description, size,
+quota overrides). The catalog generates `catalog.json` and sends it here as a PR
+(`teams/catalog.json`, never edited by hand); `teams/catalog.cue` turns every team with tenant
+namespaces into `Teams.<name>` with its quotas. The same file gives `platform-terraform` the GitHub
+team and repositories and `gitops` the app registrations (meta `delivery.md`, "Catalog").
 
 ## What the team gets
 

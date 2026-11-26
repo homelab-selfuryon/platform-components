@@ -1,7 +1,7 @@
 package teams
 
-// A product team and what the platform gives it. One file per team in this directory
-// (`teams/<name>.cue`, `Teams: <name>: #Team & {...}`); a PR adding one onboards the team.
+// A product team and what the platform gives it. Teams and their quotas come from the catalog
+// (teams/catalog.cue); this is what the platform makes of them.
 #Team: {
 	// Not `system`: its Applications namespace would be Argo CD's own (argocd-system).
 	name!: =~"^[a-z][a-z0-9]{1,20}$" & !="system"
