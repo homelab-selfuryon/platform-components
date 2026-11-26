@@ -54,7 +54,7 @@ render/                        component -> Flux Kustomization, plain objects, m
 components/<category>/<name>/  one package per component (chart + typed values, plain objects,
                                namespace, network policy, cluster-scoped whitelist)
 policies/                      Kyverno CEL policies (workloads, tenants, component ServiceAccounts)
-teams/                         teams/<name>.cue onboarding + its render
+teams/                         catalog.json (from the catalog) -> Teams + their render
 bootstrap/                     what is applied by hand once
 clusters/<cluster>/            cluster.cue, pins.json, talos/ (machine config patches + gen.sh)
 clusters/defaults.cue          #Platform: the component list every cluster starts from
@@ -90,7 +90,7 @@ One signed artifact per cluster, a directory per set: `<set>/components/<name>/{
 | `system`   | `cilium` 1.20.4 (priv.), `flux-operator` 0.62.1 + Flux v2.10.0 (priv.), `kyverno` 3.9.2 (priv., HelmRelease), `gateway-api` (Gateway API + Envoy Gateway CRDs) 1.10.0, `cert-manager` v1.21.3, `internal-ca`                                                                                                                       |
 | `policy`   | `kyverno-policies`, `host-firewall`: right after `system`, before any platform component                                                                                                                                                                                                                                           |
 | `platform` | `local-path-provisioner` v0.0.37, `metrics-server` 3.14.0, `victoria-metrics` 0.51.0, `opencost` 2.5.34, `envoy-gateway` 1.10.0, `external-dns` 1.23.0, `cnpg` 0.29.1, `secrets-store-csi-driver` 1.6.2, `openbao` 0.30.7, `openbao-csi-provider` 0.30.7, `argocd` 10.15.0, `cluster-issuers`, `gateways`, `kyverno-policies-rbac` |
-| `tenants`  | `team-notes` (from `teams/notes.cue`)                                                                                                                                                                                                                                                                                              |
+| `tenants`  | `team-notes` (from `teams/catalog.json`)                                                                                                                                                                                                                                                                                           |
 
 Versions come from `registry/latest.json` through `clusters/alpha-01/pins.json`. OCI charts are
 pinned by digest as well (`1.2.3@sha256:...`): Helm verifies the content.
