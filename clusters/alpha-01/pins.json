@@ -1,6 +1,6 @@
 {
   "cilium": "1.20.5",
-  "flux-operator": "0.63.1@sha256:81f946f697a1df9ee3d75cafa9cd979ae3a2ea79f0922b07b279bbeda34ff6df",
+  "flux-operator": "0.64.0@sha256:bfa2e5544943ae2430874f6cb3a25609c83e950207d34987b81b867a31503ca3",
   "flux": "v2.10.1",
   "kyverno": "3.10.0@sha256:290ff54d4b7d015ce2ffe5be84b60e2db5a59d8c5dcea772a8f6e32475c2eba2",
   "gateway-api": "1.10.0@sha256:494cc4b63dcb1c828e64a3af2b10e5519f6c11035eba98f331854eb0c04b9d74",
