@@ -1,12 +1,7 @@
 {
   "teams": {
     "notes": {
-      "name": "notes",
-      "description": "Product team behind the example apps notes-api and notes-stats",
-      "github": {
-        "permission": "maintain"
-      },
-      "size": "small",
+      "tenant": true,
       "quota": {
         "staging": {
           "requestsCPU": "2",
@@ -32,48 +27,7 @@
           "persistentVolumeClaims": "2",
           "requestsStorage": "4Gi"
         }
-      },
-      "tenant": true
-    },
-    "platform": {
-      "name": "platform",
-      "description": "Platform team: clusters, platform components, paved road, org configuration",
-      "github": {
-        "permission": "admin"
-      },
-      "tenant": false
-    }
-  },
-  "apps": {
-    "notes-api": {
-      "name": "notes-api",
-      "team": "notes",
-      "description": "Example app: notes REST API on Postgres",
-      "repo": "homelab-selfuryon/notes-api",
-      "tier": "tier-3",
-      "lifecycle": "active",
-      "envs": [
-        "preview",
-        "staging",
-        "prod"
-      ],
-      "cluster": "alpha-01",
-      "preview": true
-    },
-    "notes-stats": {
-      "name": "notes-stats",
-      "team": "notes",
-      "description": "Example app: calls notes-api with a projected ServiceAccount token",
-      "repo": "homelab-selfuryon/notes-stats",
-      "tier": "tier-3",
-      "lifecycle": "active",
-      "envs": [
-        "preview",
-        "staging",
-        "prod"
-      ],
-      "cluster": "alpha-01",
-      "preview": true
+      }
     }
   }
 }
