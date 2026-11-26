@@ -1,33 +1,7 @@
 {
   "teams": {
     "notes": {
-      "tenant": true,
-      "quota": {
-        "staging": {
-          "requestsCPU": "2",
-          "requestsMemory": "2Gi",
-          "limitsMemory": "4Gi",
-          "pods": "20",
-          "persistentVolumeClaims": "4",
-          "requestsStorage": "20Gi"
-        },
-        "prod": {
-          "requestsCPU": "4",
-          "requestsMemory": "4Gi",
-          "limitsMemory": "8Gi",
-          "pods": "30",
-          "persistentVolumeClaims": "4",
-          "requestsStorage": "20Gi"
-        },
-        "preview": {
-          "requestsCPU": "500m",
-          "requestsMemory": "512Mi",
-          "limitsMemory": "1Gi",
-          "pods": "8",
-          "persistentVolumeClaims": "2",
-          "requestsStorage": "4Gi"
-        }
-      }
+      "tenant": true
     }
   }
 }
