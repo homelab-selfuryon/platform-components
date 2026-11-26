@@ -54,7 +54,7 @@ render/                        component -> Flux Kustomization, plain objects, m
 components/<category>/<name>/  one package per component (chart + typed values, plain objects,
                                namespace, network policy, cluster-scoped whitelist)
 policies/                      Kyverno CEL policies (workloads, tenants, component ServiceAccounts)
-teams/                         catalog.json (from the catalog) -> Teams + their render
+teams/                         catalog.json (which teams exist, from the catalog) -> Teams with defaults, <team>.cue for a team's own values, render
 bootstrap/                     what is applied by hand once
 clusters/<cluster>/            cluster.cue, pins.json, talos/ (machine config patches + gen.sh)
 clusters/defaults.cue          #Platform: the component list every cluster starts from
