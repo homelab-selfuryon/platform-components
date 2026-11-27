@@ -1,6 +1,6 @@
 # Onboarding a team
 
-A team is onboarded in the `catalog` repository (`teams/<team>/team.cue`). The catalog sends here,
+A team is onboarded in the `catalog` repository (`teams/<team>.cue`). The catalog sends here,
 as a PR, which teams exist (`teams/catalog.json`, never edited by hand); `teams/catalog.cue` turns
 every team with tenant namespaces into `Teams.<name>` with the platform's defaults
 (`teams/schema.cue`): size `small` and its quotas.
